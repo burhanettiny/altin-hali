@@ -49,7 +49,9 @@ Kirli halıyı parmağınla ovala, kirin altında saklı altınları ve sürpriz
 
 ## APK'yı indirmek
 
-Her push'ta GitHub Actions APK'yı derler: **Actions → Altın Halı APK → son çalıştırma → Artifacts → `altin-hali-apk`**. Zip'i açıp `app-debug.apk` dosyasını telefona atın ve kurun ("bilinmeyen kaynaklar" izni gerekir).
+📲 **Telefondan doğrudan indir:** https://github.com/burhanettiny/altin-hali/releases/latest/download/AltinHali.apk
+
+Bağlantıyı telefonun tarayıcısında açın, inen `AltinHali.apk` dosyasına dokunup kurun ("bilinmeyen kaynaklar" izni istenebilir). `main` dalına her gönderimde GitHub Actions yeni APK'yı derleyip [Sürümler](https://github.com/burhanettiny/altin-hali/releases) sayfasında yayınlar; bağlantı her zaman en yenisini indirir.
 
 ## Geliştirme
 

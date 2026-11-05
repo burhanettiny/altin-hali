@@ -1,15 +1,15 @@
-# Altın Halı Android oyununun APK'sını derler.
-# Actions → bu çalıştırma → Artifacts → "altin-hali-apk" ile indirip telefona kurabilirsiniz.
+# Altın Halı Android oyununun APK'sını derler ve "Sürümler" (Releases) sayfasında yayınlar.
+# Telefondan doğrudan indirme bağlantısı:
+#   https://github.com/burhanettiny/altin-hali/releases/latest/download/AltinHali.apk
 name: Altın Halı APK
 
 on:
   push:
-    paths:
-      - "**"
+    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   derle:
@@ -24,7 +24,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: APK derle
         run: ./gradlew --no-daemon assembleDebug
+      - name: APK'yı adlandır
+        run: cp app/build/outputs/apk/debug/app-debug.apk AltinHali.apk
       - uses: actions/upload-artifact@v4
         with:
           name: altin-hali-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: AltinHali.apk
+      - name: Sürüm olarak yayınla
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SURUM=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          ETIKET="v${SURUM}-${GITHUB_RUN_NUMBER}"
+          gh release create "$ETIKET" AltinHali.apk \
+            --title "Altın Halı ${SURUM} (derleme ${GITHUB_RUN_NUMBER})" \
+            --notes "Telefona kurmak için AltinHali.apk dosyasını indirip açın. Kurulumda 'bilinmeyen kaynaklar' izni istenebilir." \
+            --target "$GITHUB_SHA" --latest
