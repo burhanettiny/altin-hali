@@ -61,8 +61,8 @@ class Tahta(val sutun: Int, val satir: Int, val katman: Float, private val rnd: 
         for (i in 0 until toplam) isaretle(i)
     }
 
-    fun hazineleriYerlestir(adet: Int, sansli: Boolean) {
-        val toplamAgirlik = Esya.values().sumOf { agirlik(it, sansli) }
+    fun hazineleriYerlestir(adet: Int, sansli: Boolean, hazineBolumu: Boolean = false) {
+        val toplamAgirlik = Esya.values().sumOf { agirlik(it, sansli, hazineBolumu) }
         var deneme = 0
         while (hazineler.size < adet && deneme < adet * 50) {
             deneme++
@@ -72,21 +72,52 @@ class Tahta(val sutun: Int, val satir: Int, val katman: Float, private val rnd: 
             var r = rnd.nextInt(toplamAgirlik)
             var tip = Esya.PARA
             for (e in Esya.values()) {
-                r -= agirlik(e, sansli)
+                r -= agirlik(e, sansli, hazineBolumu)
                 if (r < 0) { tip = e; break }
             }
             hazineler.add(Hazine(x, y, y.toInt() * sutun + x.toInt(), tip))
         }
     }
 
-    private fun agirlik(e: Esya, sansli: Boolean): Int =
-        if (sansli && e == Esya.HAYALET) e.agirlik / 3 else e.agirlik
+    private fun agirlik(e: Esya, sansli: Boolean, hazineBolumu: Boolean): Int {
+        var a = e.agirlik
+        if (sansli && e == Esya.HAYALET) a /= 3
+        if (hazineBolumu) when (e) {
+            Esya.ELMAS -> a *= 3
+            Esya.KESE -> a *= 2
+            Esya.HAYALET -> a /= 2
+            else -> {}
+        }
+        return a
+    }
 
     val temizOran: Float get() = temizSayisi.toFloat() / toplam
 
     /** (gx, gy) merkezli, rg yarıçaplı alanda kiri azaltır. Kenara doğru etkisi düşer. */
-    fun fircala(gx: Float, gy: Float, rg: Float, miktar: Float) {
-        herCember(gx, gy, rg) { i, k -> azalt(i, miktar * (0.35f + 0.65f * k)) }
+    fun fircala(gx: Float, gy: Float, rg: Float, miktar: Float): Int {
+        var n = 0
+        herCember(gx, gy, rg) { i, k -> if (azalt(i, miktar * (0.35f + 0.65f * k))) n++ }
+        return n
+    }
+
+    /** İnatçı kir: kirli hücrelerin yanındaki temiz hücreler yeniden kirlenir. */
+    fun yayil(deneme: Int, miktar: Float) {
+        repeat(deneme) {
+            val i = rnd.nextInt(toplam)
+            if (kir[i] > 0f) return@repeat
+            val x = i % sutun
+            val y = i / sutun
+            var komsu = 0f
+            if (x > 0) komsu = maxOf(komsu, kir[i - 1])
+            if (x < sutun - 1) komsu = maxOf(komsu, kir[i + 1])
+            if (y > 0) komsu = maxOf(komsu, kir[i - sutun])
+            if (y < satir - 1) komsu = maxOf(komsu, kir[i + sutun])
+            if (komsu > katman * 0.4f) {
+                kir[i] = miktar
+                temizSayisi--
+                isaretle(i)
+            }
+        }
     }
 
     /** Alanı anında tertemiz yapar. */
@@ -115,14 +146,15 @@ class Tahta(val sutun: Int, val satir: Int, val katman: Float, private val rnd: 
         }
     }
 
-    private fun azalt(i: Int, m: Float) {
-        if (kir[i] <= 0f) return
+    private fun azalt(i: Int, m: Float): Boolean {
+        if (kir[i] <= 0f) return false
         kir[i] -= m
         if (kir[i] <= 0.04f) {
             kir[i] = 0f
             temizSayisi++
         }
         isaretle(i)
+        return true
     }
 
     private fun isaretle(i: Int) {

@@ -1,7 +1,6 @@
 package com.burhanettin.altinhali
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -14,9 +13,15 @@ class OyunActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Ses.baslat(this)
         sureli = intent.getBooleanExtra(EK_SURELI, true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        oyun = OyunView(this, sureli) { sonucGoster(it) }
+        oyun = OyunView(this, sureli) { eylem ->
+            when (eylem) {
+                "tekrar" -> yeniden()
+                else -> finish()
+            }
+        }
         setContentView(oyun)
     }
 
@@ -42,48 +47,7 @@ class OyunActivity : Activity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (oyun.geriBasildi()) {
-            AlertDialog.Builder(this)
-                .setTitle("Oyundan çık?")
-                .setMessage("Topladığın altınlar cebinde kalır.")
-                .setPositiveButton("Çık") { _, _ -> finish() }
-                .setNegativeButton("Devam", null)
-                .show()
-        } else {
-            @Suppress("DEPRECATION")
-            super.onBackPressed()
-        }
-    }
-
-    private fun sonucGoster(s: Sonuc) {
-        if (isFinishing) return
-        val kayit = Kayit(this)
-        val baslik: String
-        val mesaj = StringBuilder()
-        if (s.kazandi) {
-            baslik = if (s.sureli) "Bölüm ${s.seviye} tamam! " + "⭐".repeat(s.yildiz) else "Halı tertemiz! ✨"
-            mesaj.append("Süre: ${s.gecenSure.toInt()} sn\n")
-            mesaj.append("Bulunan altın: ${s.toplanan}\n")
-            if (s.sureli) mesaj.append("Hız bonusu: ${s.bonus}\n")
-        } else {
-            baslik = "Süre doldu! ⏰"
-            mesaj.append("Halının bir kısmı hâlâ kirli.\n")
-            mesaj.append("Bulunan altın: ${s.toplanan} (cebinde kaldı)\n\n")
-            mesaj.append("İpucu: Mağazadan daha güçlü bir deterjan ya da ekstra süre al.")
-        }
-        mesaj.append("\nToplam altın: 💰 ${kayit.altin}")
-
-        val b = AlertDialog.Builder(this)
-            .setTitle(baslik)
-            .setMessage(mesaj.toString())
-            .setCancelable(false)
-            .setNegativeButton("Menü") { _, _ -> finish() }
-        if (s.kazandi && s.sureli) {
-            b.setPositiveButton("Sonraki bölüm") { _, _ -> yeniden() }
-        } else {
-            b.setPositiveButton("Tekrar") { _, _ -> yeniden() }
-        }
-        b.show()
+        if (!oyun.geriBasildi()) finish()
     }
 
     private fun yeniden() {

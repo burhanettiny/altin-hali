@@ -18,6 +18,18 @@ Kirli halıyı parmağınla ovala, kirin altında saklı altınları ve sürpriz
   | 👻 hayalet | 4 saniye kaybettirir |
 - **Süreli mod:** Her bölümün bir süresi var. Ne kadar hızlı temizlersen o kadar çok **hız bonusu** ve ⭐ alırsın. Bölümler ilerledikçe kir kalınlaşır, halının rengi ve kirin türü (çamur, toz, is, yosun) değişir.
 - **Rahat mod:** Süre yok, ama altınların yarısını kazanırsın.
+- **Kombo:** Değerli eşyaları (altın, kese, elmas) art arda hızlıca bulursan her biri daha çok altın verir (x2'ye kadar). Hayalet komboyu bozar.
+- **Özel bölümler:** Her 5. bölüm 🏆 *Hazine Halısı* (neredeyse iki kat hazine, daha çok elmas). 6. bölümden sonra bazı bölümler 🦠 *İnatçı Kir*: temizlemediğin kir yeniden yayılır.
+- **Sonuç ekranı:** Animasyonlu yıldızlar, bölüm rekoru (en hızlı süre), hız bonusu, en iyi kombo ve kazanılan başarımlar.
+- **Duraklatma menüsü:** Devam, yeniden başla, ses aç/kapa, ana menü. Uygulama arka plana geçince oyun kendiliğinden duraklar.
+
+## Daha fazlası
+
+- **🔊 Ses efektleri ve titreşim:** Bütün sesler (altın, elmas, patlama, hayalet, kombo, zafer...) dosya kullanılmadan kodla üretilir.
+- **🏆 12 başarım:** Her biri altın ödüllü (ör. *Elmas Avcısı*, *Kombo Ustası*, *Şimşek*). Başarımlar ekranında ilerleme ve istatistikler görünür.
+- **🎁 Günlük ödül:** Her gün girdiğinde altın; 7 gün üst üste gelirsen büyük ödül ve bedava 🧲.
+- **⚙️ Ayarlar:** Ses, titreşim, eğitimi yeniden gösterme, ilerlemeyi sıfırlama.
+- **🎓 İlk oyunda eğitim:** Halıyı nasıl ovalayacağını gösteren hareketli el.
 
 ## Mağaza
 
@@ -54,7 +66,10 @@ Kod tamamen Kotlin; ek kütüphane yok. Grafikler (halı deseni, altınlar, köp
 | `Katalog.kt` | Deterjanlar, karakterler, güçlendiriciler, bölüm zorluğu |
 | `Tahta.kt` | Kir ızgarası ve hazineler (Android'den bağımsız oyun mantığı) |
 | `HaliCizici.kt` | Desenli halının çizimi |
-| `OyunView.kt` | Oyun ekranı: dokunma, efektler, arayüz |
-| `OyunActivity.kt` | Oyun ekranı ve sonuç penceresi |
-| `MainActivity.kt` | Menü, mağaza, karakterler |
-| `Kayit.kt` | Altın, bölüm ve satın alımların kaydı |
+| `OyunView.kt` | Oyun ekranı: dokunma, efektler, arayüz, duraklatma ve sonuç ekranı |
+| `OyunActivity.kt` | Oyun ekranını barındırır |
+| `MainActivity.kt` | Menü, mağaza, karakterler, başarımlar, ayarlar, günlük ödül |
+| `Kayit.kt` | Altın, bölüm, satın alımlar, ayarlar ve istatistiklerin kaydı |
+| `Ses.kt` | Kodla üretilen ses efektleri ve titreşim |
+| `Basarimlar.kt` | Başarımlar ve ödülleri |
+| `MenuArka.kt` | Menülerin hareketli arka planı |
