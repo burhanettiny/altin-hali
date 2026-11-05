@@ -15,10 +15,24 @@ class OyunActivity : Activity() {
         super.onCreate(savedInstanceState)
         Ses.baslat(this)
         sureli = intent.getBooleanExtra(EK_SURELI, true)
+        val yaris = intent.getBooleanExtra(EK_YARIS, false) && Yaris.aktif
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        oyun = OyunView(this, sureli) { eylem ->
+        val ayar = if (yaris) {
+            OyunAyari(sureli = true, seviye = Yaris.seviye, tohum = Yaris.tohum, yaris = true, oyuncu = Yaris.siradaki)
+        } else {
+            OyunAyari(sureli = sureli, seviye = Kayit(this).seviye, tohum = System.nanoTime())
+        }
+        oyun = OyunView(this, ayar) { eylem ->
             when (eylem) {
-                "tekrar" -> yeniden()
+                "tekrar" -> yeniden(yaris)
+                "yaris_sonuc" -> {
+                    startActivity(
+                        Intent(this, MainActivity::class.java)
+                            .putExtra(MainActivity.EK_YARIS_SONUC, true)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    )
+                    finish()
+                }
                 else -> finish()
             }
         }
@@ -50,13 +64,14 @@ class OyunActivity : Activity() {
         if (!oyun.geriBasildi()) finish()
     }
 
-    private fun yeniden() {
-        startActivity(Intent(this, OyunActivity::class.java).putExtra(EK_SURELI, sureli))
+    private fun yeniden(yaris: Boolean) {
+        startActivity(Intent(this, OyunActivity::class.java).putExtra(EK_SURELI, sureli).putExtra(EK_YARIS, yaris))
         finish()
         overridePendingTransition(0, 0)
     }
 
     companion object {
         const val EK_SURELI = "sureli"
+        const val EK_YARIS = "yaris"
     }
 }

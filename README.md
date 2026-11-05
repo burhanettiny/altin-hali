@@ -23,6 +23,21 @@ Kirli halıyı parmağınla ovala, kirin altında saklı altınları ve sürpriz
 - **Sonuç ekranı:** Animasyonlu yıldızlar, bölüm rekoru (en hızlı süre), hız bonusu, en iyi kombo ve kazanılan başarımlar.
 - **Duraklatma menüsü:** Devam, yeniden başla, ses aç/kapa, ana menü. Uygulama arka plana geçince oyun kendiliğinden duraklar.
 
+## Gerçek halı yıkama
+
+- **🥢 Çöpler:** Muz kabuğu, çorap, kola kutusu, gazete... Cımbızla tutup sağ alttaki 🗑️ çöp kutusuna at. Çöpün altı temizlenemez.
+- **🚿 Durulama:** Deterjan köpük bırakır; köpüğü su ile durulamadan halı temiz sayılmaz. Islak halı %35 daha kolay temizlenir, zamanla kurur.
+- **📱 Silkeleme:** Telefonu salla (ya da 🧺 düğmesi): halı silkelenir, toz ve hafif çöpler camdan uçar. Pencerede halı silkeleyen teyze görünür.
+- **🧪 Zorlu lekeler:** Kahve, yağ, şarap, pas, mürekkep, sakız. Her biri farklı kimya ister (oksijen, yağ çözücü, asit, çözücü...). Bölüm ilerledikçe yeni ve daha çok leke çıkar.
+- **🧰 Aletler:** 🧽 Sünger, 🧹 Sert Fırça, 🚿 Su, 🥢 Cımbız, 🌀 Süpürge (toz), 🧊 Buz (sakız).
+- **🧪 Formül Laboratuvarı:** Karbonat, sirke, limon tuzu, oksijenli su, enzim, alkol, yumuşatıcı, lavanta esansı ile kendi deterjanını yap. Asit ile baz birbirini nötrler! 3 formül yuvası.
+- **🧒 Şemi ve 👧 Nils:** Şemi arada bir halının üstünden geçip çamurlu ayak izi bırakır. Nils onu kızdırınca Şemi kahve döker, çöp atar. Şemi'ye dokun, kaçsın.
+- **👴 Acı Dede:** Evin reisi; işi o verir, sonunda halıyı o değerlendirir.
+
+## 🏁 Yarışma
+
+Aynı telefonda 2–4 kişi sırayla oynar; herkes aynı halıyı temizler. Bitiren 1000 + kalan saniye × 20 + bulduğu altın puan alır. Sonunda madalyalı sıralama ve rövanş.
+
 ## Daha fazlası
 
 - **🔊 Ses efektleri ve titreşim:** Bütün sesler (altın, elmas, patlama, hayalet, kombo, zafer...) dosya kullanılmadan kodla üretilir.
@@ -45,7 +60,7 @@ Kirli halıyı parmağınla ovala, kirin altında saklı altınları ve sürpriz
 
 **Güçlendiriciler** (tek kullanımlık, oyunda alttaki düğmelerden): ⏳ Ekstra Süre (+15 sn), 🔍 Hazine Gözlüğü, 💣 Köpük Bombası, 🧲 Altın Mıknatısı.
 
-**Karakterler:** 👨 Hasan Usta, 👩 Ayşe Abla (+%25 altın), 🏃 Turbo Tarık (geniş fırça), 👵 Fatma Nine (+12 sn), 🐱 Şanslı Kedi (daha çok hazine, az hayalet), 🤖 Süpürgeç (kendi kendine temizleyen robot).
+**Karakterler:** 👨 Hasan Usta, 👩 Ayşe Abla (+%25 altın), 🏃 Turbo Tarık (geniş fırça), 👵 Songül Nine (+12 sn), 🌹 Gül Hala (hızlı durulama), 💃 Tef Teyze (camdan halı silkeleme ustası), 👓 Güzi Hala (leke uzmanı), 🐱 Şanslı Kedi (daha çok hazine), 🤖 Süpürgeç (robot yardımcı), 👴 Acı Dede (evin reisi: çöpler kendiliğinden toplanır).
 
 ## APK'yı indirmek
 

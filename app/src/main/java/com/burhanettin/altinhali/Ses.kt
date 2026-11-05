@@ -52,7 +52,7 @@ object Ses {
         havuz = h
         Thread {
             try {
-                val dizin = File(app.cacheDir, "ses_v1")
+                val dizin = File(app.cacheDir, "ses_v2")
                 dizin.mkdirs()
                 for ((ad, ornek) in uret()) {
                     val f = File(dizin, "$ad.wav")
@@ -127,6 +127,17 @@ object Ses {
                 floatArrayOf(784f, 988f, 1175f, 1568f).forEachIndexed { i, f -> nota(it, i * 0.08f, 0.35f, f, 0.38f) }
             },
             "satin" to ses(0.35f) { nota(it, 0f, 0.1f, 1175f, 0.4f); nota(it, 0.08f, 0.25f, 1760f, 0.45f) },
+            "cop" to ses(0.4f) { suzul(it, 0f, 0.12f, 300f, 120f, 0.7f); gurultu(it, 0.05f, 0.25f, 0.5f, 0.6f, r) },
+            "cimbiz" to ses(0.08f) { nota(it, 0f, 0.05f, 2600f, 0.3f, harmonik = false) },
+            "su" to ses(0.18f) { gurultu(it, 0f, 0.17f, 0.45f, 0.2f, r) },
+            "supurge" to ses(0.15f) { gurultu(it, 0f, 0.15f, 0.35f, 0.75f, r); nota(it, 0f, 0.15f, 220f, 0.15f) },
+            "buz" to ses(0.15f) {
+                for (k in 0 until 5) nota(it, k * 0.025f, 0.03f, 3000f + k * 300f, 0.25f, harmonik = false)
+            },
+            "silkele" to ses(0.4f) { gurultu(it, 0f, 0.35f, 0.9f, 0.9f, r); suzul(it, 0f, 0.2f, 120f, 60f, 0.6f) },
+            "alet" to ses(0.1f) { nota(it, 0f, 0.05f, 660f, 0.3f); nota(it, 0.04f, 0.05f, 990f, 0.3f) },
+            "semi" to ses(0.5f) { suzul(it, 0f, 0.2f, 500f, 900f, 0.35f); suzul(it, 0.22f, 0.25f, 900f, 400f, 0.35f) },
+            "nils" to ses(0.4f) { nota(it, 0f, 0.12f, 1319f, 0.3f); nota(it, 0.13f, 0.12f, 1047f, 0.3f); nota(it, 0.26f, 0.12f, 1319f, 0.3f) },
         )
     }
 

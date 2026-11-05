@@ -49,7 +49,23 @@ class Kayit(ctx: Context) {
         set(v) = p.edit().putInt("odul_seri", v).apply()
 
     fun sahip(tur: String, id: String): Boolean =
-        id == "sabun" || id == "usta" || p.getBoolean("sahip_${tur}_$id", false)
+        id in VARSAYILAN || p.getBoolean("sahip_${tur}_$id", false)
+
+    /** Formül laboratuvarındaki bir yuvanın malzeme ölçüleri. */
+    fun formul(slot: String): IntArray {
+        val n = Katalog.malzemeler.size
+        val dizi = IntArray(n)
+        val s = p.getString("formul_$slot", null)
+        if (s == null) {
+            dizi[0] = 2 // varsayılan: biraz sabun bazı
+            return dizi
+        }
+        s.split(",").forEachIndexed { i, v -> if (i < n) dizi[i] = v.toIntOrNull() ?: 0 }
+        return dizi
+    }
+
+    fun formulKaydet(slot: String, dizi: IntArray) =
+        p.edit().putString("formul_$slot", dizi.joinToString(",")).apply()
 
     /** Yeterli altın varsa düşer ve true döner. */
     fun harca(fiyat: Int): Boolean {
@@ -98,4 +114,8 @@ class Kayit(ctx: Context) {
     fun basarimIsaretle(id: String) = p.edit().putBoolean("basarim_$id", true).apply()
 
     fun sifirla() = p.edit().clear().apply()
+
+    companion object {
+        private val VARSAYILAN = setOf("sabun", "usta", "baz", "sunger", "su", "cimbiz")
+    }
 }

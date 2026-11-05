@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -20,15 +21,25 @@ import java.util.TimeZone
 /** Ana menü, mağaza, karakterler, başarımlar ve ayarlar (hepsi koddan kurulur, XML yok). */
 class MainActivity : Activity() {
 
-    private enum class Ekran { MENU, MAGAZA, KARAKTER, BASARIM, AYAR }
+    private enum class Ekran { MENU, MAGAZA, KARAKTER, BASARIM, AYAR, LAB, YARIS, YARIS_SONUC }
 
     private lateinit var kayit: Kayit
     private lateinit var kok: FrameLayout
     private var icerik: ScrollView? = null
     private var ekran = Ekran.MENU
+    private var sonEkran: Ekran? = null
+    private var labSlot = "A"
+    private var labMiktar: IntArray? = null
+    private var yarisSayisi = 2
+    private var yarisZorluk = 3
+    private val yarisIsimleri = arrayOf("Şemi", "Nils", "Güzi", "Gül")
     private val d by lazy { resources.displayMetrics.density }
 
     private val GUNLUK_ODUL = intArrayOf(50, 75, 100, 150, 200, 300, 500)
+
+    companion object {
+        const val EK_YARIS_SONUC = "yaris_sonuc"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +49,12 @@ class MainActivity : Activity() {
         kok = FrameLayout(this)
         kok.addView(MenuArka(this), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         setContentView(kok)
+        if (intent.getBooleanExtra(EK_YARIS_SONUC, false)) ekran = Ekran.YARIS_SONUC
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra(EK_YARIS_SONUC, false)) ekran = Ekran.YARIS_SONUC
     }
 
     private fun ilkHediye() {
@@ -72,6 +89,9 @@ class MainActivity : Activity() {
             Ekran.KARAKTER -> karakterler()
             Ekran.BASARIM -> basarimlar()
             Ekran.AYAR -> ayarlar()
+            Ekran.LAB -> lab()
+            Ekran.YARIS -> yarisKur()
+            Ekran.YARIS_SONUC -> yarisSonuc()
         }
     }
 
@@ -130,8 +150,11 @@ class MainActivity : Activity() {
             setBackgroundColor(Color.TRANSPARENT)
             addView(kap)
         }
+        val eskiY = if (ekran == sonEkran) icerik?.scrollY ?: 0 else 0
+        sonEkran = ekran
         icerik?.let { kok.removeView(it) }
         icerik = kaydir
+        kaydir.post { kaydir.scrollTo(0, eskiY) }
         kok.addView(kaydir, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
     }
 
@@ -277,7 +300,7 @@ class MainActivity : Activity() {
     // ------------------------------------------------------------ ekranlar
 
     private fun menu() = sayfa {
-        val det = Katalog.deterjan(kayit.deterjan)
+        val det = Katalog.deterjan(kayit.deterjan, kayit)
         val kar = Katalog.karakter(kayit.karakter)
         yazi("🧽", 64f, alt = 0)
         yazi("Altın Halı", 42f, 0xFFFFD54F.toInt(), kalin = true, alt = 2).apply {
@@ -297,9 +320,11 @@ class MainActivity : Activity() {
         }
         dugme("▶  Oyna — Bölüm $sv$ozel", boyut = 20f) { oyna(true) }
         dugme("🧘  Rahat Mod  (süre yok)", 0xFF4FC3F7.toInt(), 0xFF0D2A3A.toInt()) { oyna(false) }
+        dugme("🏁  Yarışma  (2–4 kişi)", 0xFFFF7043.toInt(), 0xFF3A1206.toInt()) { goster(Ekran.YARIS) }
         dugme("🛒  Mağaza", 0xFF81C784.toInt(), 0xFF0F2E12.toInt()) { goster(Ekran.MAGAZA) }
+        dugme("🧪  Formül Laboratuvarı", 0xFF4DB6AC.toInt(), 0xFF06302B.toInt()) { labMiktar = null; goster(Ekran.LAB) }
         dugme("🧑  Karakterler", 0xFFBA68C8.toInt(), 0xFF2A0F30.toInt()) { goster(Ekran.KARAKTER) }
-        dugme("🏆  Başarımlar", 0xFFFF8A65.toInt(), 0xFF3A1206.toInt()) { goster(Ekran.BASARIM) }
+        dugme("🏆  Başarımlar", 0xFFFFD54F.toInt(), 0xFF3A2A06.toInt()) { goster(Ekran.BASARIM) }
 
         val satir = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL }
         addView(satir, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
@@ -318,7 +343,8 @@ class MainActivity : Activity() {
         for (dt in Katalog.deterjanlar) {
             val sahip = kayit.sahip("deterjan", dt.id)
             val secili = kayit.deterjan == dt.id
-            val ozellik = "Genişlik x${"%.2f".format(dt.yaricap)} · Güç x${"%.1f".format(dt.guc)}"
+            val iyi = dt.iyiOlduklari().filter { it != Leke.CAMUR && it != Leke.TOZ }.joinToString(", ") { it.ad }
+            val ozellik = "Genişlik x${"%.2f".format(dt.yaricap)}" + if (iyi.isNotEmpty()) " · İyi: $iyi" else ""
             kart(
                 dt.emoji, dt.ad, "${dt.aciklama}\n$ozellik",
                 when { secili -> "Kullanılıyor"; sahip -> "Sende var"; else -> "💰 ${dt.fiyat}" },
@@ -337,6 +363,26 @@ class MainActivity : Activity() {
                 goster(Ekran.MAGAZA)
             }
         }
+
+        bolumBasligi("Aletler")
+        for (a in Alet.values()) {
+            val sahip = kayit.sahip("alet", a.id)
+            kart(
+                a.emoji, a.ad, a.aciklama,
+                if (sahip) "Sende var (oyunda alttan seç)" else "💰 ${a.fiyat}",
+                if (sahip) null else "Satın al",
+                dugmeAktif = kayit.altin >= a.fiyat,
+                vurgulu = false,
+            ) {
+                if (!kayit.harca(a.fiyat)) { yetersiz(); return@kart }
+                kayit.sahiplen("alet", a.id)
+                satinAlindi()
+                goster(Ekran.MAGAZA)
+            }
+        }
+
+        bolumBasligi("Kendi deterjanını yap")
+        dugme("🧪  Formül Laboratuvarı", 0xFF4DB6AC.toInt(), 0xFF06302B.toInt(), 16f) { labMiktar = null; goster(Ekran.LAB) }
 
         bolumBasligi("Güçlendiriciler (oyun içinde kullanılır)")
         for (g in Katalog.guclendiriciler) {
@@ -457,8 +503,263 @@ class MainActivity : Activity() {
                 .setNegativeButton("Vazgeç", null)
                 .show()
         }
-        yazi("Altın Halı · sürüm 0.2", 13f, 0xFF90A4AE.toInt(), alt = 16)
+        yazi("Altın Halı · sürüm 0.3", 13f, 0xFF90A4AE.toInt(), alt = 16)
         dugme("← Geri", 0x33FFFFFF, Color.WHITE) { goster(Ekran.MENU) }
+    }
+
+    // ------------------------------------------------------------ formül laboratuvarı
+
+    private fun lab() = sayfa {
+        val miktar = labMiktar ?: kayit.formul(labSlot).also { labMiktar = it }
+        baslik("🧪 Formül Laboratuvarı")
+        yazi("Malzemeleri karıştır, zorlu lekelere özel deterjanını yap. En fazla ${Katalog.FORMUL_EN_FAZLA} ölçü.", 14f, 0xFFCFD8DC.toInt(), alt = 12)
+
+        // Yuvalar
+        val yuvalar = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL }
+        addView(yuvalar, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) })
+        for (slot in Katalog.formulSlotlari) {
+            val secili = slot == labSlot
+            val kullaniliyor = kayit.deterjan == "formul_$slot"
+            yuvalar.addView(Button(this@MainActivity).apply {
+                text = "Formül $slot" + if (kullaniliyor) " ✓" else ""
+                isAllCaps = false
+                textSize = 14f
+                setTextColor(if (secili) 0xFF06302B.toInt() else Color.WHITE)
+                background = yuvarlak(if (secili) 0xFF4DB6AC.toInt() else 0x33FFFFFF, 12)
+                stateListAnimator = null
+                setOnClickListener {
+                    Ses.cal("dugme", 0.6f)
+                    labSlot = slot
+                    labMiktar = kayit.formul(slot)
+                    goster(Ekran.LAB)
+                }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(3); marginEnd = dp(3) })
+        }
+
+        val toplam = miktar.sum()
+        bolumBasligi("Malzemeler  ($toplam/${Katalog.FORMUL_EN_FAZLA} ölçü)")
+        Katalog.malzemeler.forEachIndexed { i, m ->
+            val sahip = kayit.sahip("malzeme", m.id)
+            val satir = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(12), dp(8), dp(8), dp(8))
+                background = yuvarlak(if (miktar[i] > 0) 0x5526A69A else 0x33FFFFFF, 14)
+            }
+            satir.addView(TextView(this@MainActivity).apply { text = m.emoji; textSize = 28f },
+                LinearLayout.LayoutParams(dp(48), ViewGroup.LayoutParams.WRAP_CONTENT))
+            val orta = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+            orta.addView(TextView(this@MainActivity).apply {
+                text = m.ad
+                textSize = 15f
+                setTextColor(Color.WHITE)
+                setTypeface(typeface, Typeface.BOLD)
+            })
+            orta.addView(TextView(this@MainActivity).apply {
+                text = m.aciklama
+                textSize = 12f
+                setTextColor(0xFFCFD8DC.toInt())
+            })
+            satir.addView(orta, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            fun kucukDugme(yazi: String, aktif: Boolean, tik: () -> Unit) = Button(this@MainActivity).apply {
+                text = yazi
+                isAllCaps = false
+                textSize = 16f
+                isEnabled = aktif
+                setTextColor(if (aktif) 0xFF2B1B00.toInt() else 0xFF90A4AE.toInt())
+                background = yuvarlak(if (aktif) 0xFFFFB300.toInt() else 0xFF455A64.toInt(), 10)
+                minWidth = 0
+                minimumWidth = 0
+                setPadding(dp(10), dp(4), dp(10), dp(4))
+                stateListAnimator = null
+                setOnClickListener { tik() }
+            }
+            if (sahip) {
+                satir.addView(kucukDugme("−", miktar[i] > 0) {
+                    miktar[i]--
+                    Ses.cal("dugme", 0.5f, 0.8f)
+                    goster(Ekran.LAB)
+                }, LinearLayout.LayoutParams(dp(42), dp(42)))
+                satir.addView(TextView(this@MainActivity).apply {
+                    text = "${miktar[i]}"
+                    textSize = 18f
+                    gravity = Gravity.CENTER
+                    setTextColor(Color.WHITE)
+                    setTypeface(typeface, Typeface.BOLD)
+                }, LinearLayout.LayoutParams(dp(30), ViewGroup.LayoutParams.WRAP_CONTENT))
+                satir.addView(kucukDugme("+", miktar[i] < Katalog.MALZEME_EN_FAZLA && toplam < Katalog.FORMUL_EN_FAZLA) {
+                    miktar[i]++
+                    Ses.cal("dugme", 0.5f, 1.2f)
+                    goster(Ekran.LAB)
+                }, LinearLayout.LayoutParams(dp(42), dp(42)))
+            } else {
+                satir.addView(kucukDugme("💰 ${m.fiyat}", kayit.altin >= m.fiyat) {
+                    if (!kayit.harca(m.fiyat)) { yetersiz(); return@kucukDugme }
+                    kayit.sahiplen("malzeme", m.id)
+                    satinAlindi()
+                    goster(Ekran.LAB)
+                }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(42)))
+            }
+            addView(satir, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(8) })
+        }
+
+        // Sonuç
+        val sonuc = Katalog.formulHesapla(miktar)
+        bolumBasligi("Formülün gücü")
+        for (o in Ozellik.values()) cubuk(o.ad, sonuc.profil[o.ordinal] / 2.6f, o.renk, "%.1f".format(sonuc.profil[o.ordinal]))
+        cubuk("Köpük (durulama gerekir)", sonuc.kopuk / 1.2f, 0xFFECEFF1.toInt(), "%.1f".format(sonuc.kopuk))
+        if (sonuc.altinBonus > 0f) cubuk("Altın bonusu", sonuc.altinBonus / 0.24f, 0xFFFFD54F.toInt(), "+%${(sonuc.altinBonus * 100).toInt()}")
+
+        val det = Katalog.formulDeterjani(labSlot, miktar)
+        val iyi = Leke.values().filter { it.etki(det.profil) >= 1.0f }
+        val zayif = Leke.values().filter { it.etki(det.profil) < 0.45f }
+        yazi("✅ İyi geldiği: " + (iyi.joinToString(", ") { it.ad }.ifEmpty { "—" }), 14f, 0xFFA5D6A7.toInt(), alt = 4).gravity = Gravity.START
+        yazi("❌ Zayıf kaldığı: " + (zayif.joinToString(", ") { it.ad }.ifEmpty { "—" }), 14f, 0xFFEF9A9A.toInt(), alt = 8).gravity = Gravity.START
+        for (u in sonuc.uyarilar) yazi(u, 13f, 0xFFFFE082.toInt(), alt = 4).gravity = Gravity.START
+        yazi("", 6f)
+
+        dugme("💾  Kaydet ve Kullan (Formül $labSlot)", 0xFF4DB6AC.toInt(), 0xFF06302B.toInt()) {
+            kayit.formulKaydet(labSlot, miktar)
+            kayit.deterjan = "formul_$labSlot"
+            Ses.cal("satin", 0.8f)
+            Toast.makeText(this@MainActivity, "🧪 Formül $labSlot kaydedildi ve kullanılıyor!", Toast.LENGTH_SHORT).show()
+            goster(Ekran.LAB)
+        }
+        dugme("↺  Sıfırla", 0x33FFFFFF, Color.WHITE, 15f) {
+            labMiktar = IntArray(Katalog.malzemeler.size).also { it[0] = 2 }
+            goster(Ekran.LAB)
+        }
+        dugme("← Geri", 0x33FFFFFF, Color.WHITE) { goster(Ekran.MENU) }
+    }
+
+    private fun LinearLayout.cubuk(ad: String, oran: Float, renk: Int, deger: String) {
+        val kap = LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        kap.addView(TextView(this@MainActivity).apply {
+            text = ad
+            textSize = 13f
+            setTextColor(0xFFCFD8DC.toInt())
+        }, LinearLayout.LayoutParams(dp(130), ViewGroup.LayoutParams.WRAP_CONTENT))
+        val iz = LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            background = yuvarlak(0x33FFFFFF, 6)
+        }
+        val o = oran.coerceIn(0f, 1f)
+        iz.addView(android.view.View(this@MainActivity).apply { background = yuvarlak(renk, 6) },
+            LinearLayout.LayoutParams(0, dp(12), o.coerceAtLeast(0.001f)))
+        iz.addView(android.view.View(this@MainActivity), LinearLayout.LayoutParams(0, dp(12), (1f - o).coerceAtLeast(0.001f)))
+        kap.addView(iz, LinearLayout.LayoutParams(0, dp(12), 1f))
+        kap.addView(TextView(this@MainActivity).apply {
+            text = deger
+            textSize = 13f
+            gravity = Gravity.END
+            setTextColor(Color.WHITE)
+        }, LinearLayout.LayoutParams(dp(44), ViewGroup.LayoutParams.WRAP_CONTENT))
+        addView(kap, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(6) })
+    }
+
+    // ------------------------------------------------------------ yarışma
+
+    private val isimKutulari = ArrayList<EditText>()
+
+    private fun yarisKur() = sayfa {
+        yazi("🏁 Yarışma", 28f, kalin = true, alt = 4)
+        yazi("Aynı telefonda sırayla oynayın. Herkes aynı halıyı temizler, en yüksek puan kazanır!", 14f, 0xFFCFD8DC.toInt(), alt = 16)
+
+        bolumBasligi("Kaç kişi?")
+        val sayi = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL }
+        addView(sayi, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(8) })
+        for (n in 2..4) {
+            sayi.addView(Button(this@MainActivity).apply {
+                text = "$n kişi"
+                isAllCaps = false
+                textSize = 15f
+                val secili = n == yarisSayisi
+                setTextColor(if (secili) 0xFF3A1206.toInt() else Color.WHITE)
+                background = yuvarlak(if (secili) 0xFFFF7043.toInt() else 0x33FFFFFF, 12)
+                stateListAnimator = null
+                setOnClickListener { isimleriSakla(); yarisSayisi = n; goster(Ekran.YARIS) }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(3); marginEnd = dp(3) })
+        }
+
+        bolumBasligi("Oyuncular")
+        isimKutulari.clear()
+        for (i in 0 until yarisSayisi) {
+            val e = EditText(this@MainActivity).apply {
+                setText(yarisIsimleri[i])
+                setSelectAllOnFocus(true)
+                textSize = 17f
+                setTextColor(Color.WHITE)
+                setHintTextColor(0xFF90A4AE.toInt())
+                hint = "${i + 1}. oyuncu"
+                isSingleLine = true
+                background = yuvarlak(0x33FFFFFF, 12)
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+            }
+            isimKutulari.add(e)
+            addView(e, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(8) })
+        }
+
+        bolumBasligi("Zorluk")
+        val zorluk = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL }
+        addView(zorluk, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(16) })
+        for ((ad, sv) in listOf("Kolay" to 1, "Orta" to 4, "Zor" to 8, "Usta" to 12)) {
+            zorluk.addView(Button(this@MainActivity).apply {
+                text = ad
+                isAllCaps = false
+                textSize = 14f
+                val secili = sv == yarisZorluk
+                setTextColor(if (secili) 0xFF3A1206.toInt() else Color.WHITE)
+                background = yuvarlak(if (secili) 0xFFFF7043.toInt() else 0x33FFFFFF, 12)
+                stateListAnimator = null
+                setOnClickListener { isimleriSakla(); yarisZorluk = sv; goster(Ekran.YARIS) }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(3); marginEnd = dp(3) })
+        }
+
+        dugme("▶  Yarışı Başlat", 0xFFFF7043.toInt(), 0xFF3A1206.toInt(), 20f) {
+            isimleriSakla()
+            val isimler = (0 until yarisSayisi).map { yarisIsimleri[it].trim().ifEmpty { "${it + 1}. oyuncu" } }
+            Yaris.basla(isimler, yarisZorluk)
+            startActivity(Intent(this@MainActivity, OyunActivity::class.java)
+                .putExtra(OyunActivity.EK_SURELI, true)
+                .putExtra(OyunActivity.EK_YARIS, true))
+        }
+        yazi("Puan: halıyı bitiren 1000 + kalan saniye × 20 + bulduğu altın. Bitiremeyen temizlediği kadar puan alır. Yarışmada güçlendirici kullanılmaz.", 12f, 0xFF90A4AE.toInt(), alt = 12)
+        dugme("← Geri", 0x33FFFFFF, Color.WHITE) { goster(Ekran.MENU) }
+    }
+
+    private fun isimleriSakla() {
+        isimKutulari.forEachIndexed { i, e -> if (i < yarisIsimleri.size) yarisIsimleri[i] = e.text.toString() }
+    }
+
+    private fun yarisSonuc() = sayfa {
+        val sirali = Yaris.sonuclar.sortedByDescending { it.puan }
+        yazi("🏆", 56f, alt = 0)
+        yazi("Yarışma Sonuçları", 28f, kalin = true, alt = 6)
+        sirali.firstOrNull()?.let { yazi("Kazanan: ${it.ad}!", 22f, 0xFFFFD54F.toInt(), kalin = true, alt = 16) }
+        val madalya = listOf("🥇", "🥈", "🥉", "🎗️")
+        sirali.forEachIndexed { i, s ->
+            kart(
+                madalya.getOrElse(i) { "🎗️" }, "${s.ad}  —  ${s.puan} puan",
+                if (s.bitirdi) "Halıyı ${s.sure} saniyede bitirdi" else "Süre doldu · %${s.temizYuzde} temiz",
+                "💰 ${s.altin} altın buldu", null, false, i == 0,
+            ) {}
+        }
+        if (sirali.isEmpty()) yazi("Henüz sonuç yok.", 16f)
+        yazi("", 8f)
+        dugme("↻  Rövanş", 0xFFFF7043.toInt(), 0xFF3A1206.toInt()) {
+            val isimler = sirali.map { it.ad }.ifEmpty { yarisIsimleri.take(yarisSayisi) }
+            Yaris.basla(Yaris.sonuclar.map { it.ad }.ifEmpty { isimler }, Yaris.seviye)
+            startActivity(Intent(this@MainActivity, OyunActivity::class.java)
+                .putExtra(OyunActivity.EK_SURELI, true)
+                .putExtra(OyunActivity.EK_YARIS, true))
+        }
+        dugme("🏠  Ana Menü", 0x33FFFFFF, Color.WHITE) {
+            Yaris.bitir()
+            goster(Ekran.MENU)
+        }
     }
 
     private fun nasilOynanir() {
@@ -473,6 +774,11 @@ class MainActivity : Activity() {
                     "  👻 Hayalet: 4 saniye kaybettirir ve komboyu bozar!\n\n" +
                     "🔥 Kombo: Değerli eşyaları art arda hızlıca bulursan her biri daha çok altın verir.\n\n" +
                     "⏱ Süreli modda halıyı ne kadar hızlı temizlersen o kadar çok hız bonusu ve yıldız alırsın.\n\n" +
+                    "🥢 Halının üstündeki çöpleri cımbızla tutup 🗑️ çöp kutusuna at. Çöpün altı temizlenmez!\n\n" +
+                    "🚿 Deterjan köpük bırakır: köpüğü su ile durula. Islak halı daha kolay temizlenir.\n\n" +
+                    "📱 Telefonu salla ya da 🧺 düğmesine bas: halı silkelenir, toz ve hafif çöpler dökülür.\n\n" +
+                    "🧪 Zorlu lekeler: kahve, yağ, şarap, pas, mürekkep, sakız. Her biri farklı kimya ister. Formül Laboratuvarında kendi deterjanını yap!\n\n" +
+                    "🧒 Şemi ortalığı kirletir, Nils onu kızdırınca daha da beter olur. Şemi'ye dokun, kaçsın!\n\n" +
                     "🏆 Her 5. bölüm bir Hazine Halısı: neredeyse iki kat hazine!\n" +
                     "🦠 İnatçı kir bölümlerinde temizlemediğin kir yeniden yayılır.\n\n" +
                     "🛒 Altınlarla daha güçlü deterjanlar, güçlendiriciler ve yetenekli karakterler al.\n\n" +
