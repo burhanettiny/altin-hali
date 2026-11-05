@@ -23,6 +23,29 @@ Kirli halıyı parmağınla ovala, kirin altında saklı altınları ve sürpriz
 - **Sonuç ekranı:** Animasyonlu yıldızlar, bölüm rekoru (en hızlı süre), hız bonusu, en iyi kombo ve kazanılan başarımlar.
 - **Duraklatma menüsü:** Devam, yeniden başla, ses aç/kapa, ana menü. Uygulama arka plana geçince oyun kendiliğinden duraklar.
 
+## ✨ 3B grafik (OpenGL ES 3.0)
+
+Halı yüzeyi gerçek zamanlı ışıkla çizilir:
+
+- **Yün tüyleri ve düğümler** ışığı yakalar; telefonu eğince ışık kayar, kadife parlaması değişir.
+- **Kir** kabuklu ve kabarıktır, kenarları doğal ve düzensizdir; kahve gibi lekelerin kenarı koyu halka yapar.
+- **Köpük** kabarcık kabarcık kabarır ve parlar; **ıslak** yerler koyulaşır ve parıldar.
+- **Silkeleme** halının üstünden geçen bir dalga olarak görünür.
+- **Cilalı parke zemin** ışığı yansıtır, halının altında yumuşak gölge vardır.
+
+Cihaz OpenGL ES 3.0 desteklemiyorsa ya da Ayarlar'dan kapatılırsa oyun 2B çizime döner. Shader'lar `app/src/main/assets/shaders/` içindedir.
+
+## 🧶 Halı türleri ve hasar
+
+| Halı | Dikkat |
+|---|---|
+| 🐑 Yün | Dayanıklı |
+| 🧵 Sentetik | Yağ kolay çıkar, alkol (çözücü) eritir |
+| 🧣 İpek | Sert fırça, güçlü asit ve oksijen soldurur — 1,6 kat altın |
+| 🏺 Antika | Çok hassas ve çok değerli — 2 kat altın |
+
+Yanlış alet ya da kimya halıyı soldurur (hasar çubuğu). Hasar sınırı aşılırsa halı mahvolur; az hasar yıldızı ve bonusu düşürür. Formül Laboratuvarı her formülün hangi halıda güvenli olduğunu gösterir.
+
 ## Gerçek halı yıkama
 
 - **🥢 Çöpler:** Muz kabuğu, çorap, kola kutusu, gazete... Cımbızla tutup sağ alttaki 🗑️ çöp kutusuna at. Çöpün altı temizlenemez.

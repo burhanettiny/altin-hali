@@ -32,6 +32,9 @@ class Tahta(val sutun: Int, val satir: Int, val katman: Float, private val rnd: 
     val kopuk = FloatArray(toplam)
     val islak = FloatArray(toplam)
     val ton = FloatArray(toplam)
+    val hasar = FloatArray(toplam)
+    var hasarToplam = 0f
+        private set
     private val ortu = IntArray(toplam)
     private val temiz = BooleanArray(toplam)
     private val kopukBayrak = BooleanArray(toplam)
@@ -198,6 +201,7 @@ class Tahta(val sutun: Int, val satir: Int, val katman: Float, private val rnd: 
     }
 
     val temizOran: Float get() = temizSayisi.toFloat() / toplam
+    val hasarOrani: Float get() = hasarToplam / toplam
     val kalanCop: Int get() = coplar.count { !it.atildi }
 
     /**
@@ -205,10 +209,17 @@ class Tahta(val sutun: Int, val satir: Int, val katman: Float, private val rnd: 
      * Sökülen kirin [kopukOran] katı kadar köpük kalır. Islak hücrelerde [islakBonus] uygulanır.
      * Dönüş: etkilenen hücre sayısı ve en zayıf kaldığı leke (ipucu için).
      */
-    fun ovala(gx: Float, gy: Float, rg: Float, etki: FloatArray, kopukOran: Float, islakBonus: Float): Int {
+    fun ovala(gx: Float, gy: Float, rg: Float, etki: FloatArray, kopukOran: Float, islakBonus: Float, hasarOran: Float = 0f): Int {
         var n = 0
         herCember(gx, gy, rg) { i, k ->
-            if (ortu[i] > 0 || kir[i] <= 0f) return@herCember
+            if (ortu[i] > 0) return@herCember
+            if (hasarOran > 0f && hasar[i] < 1f) {
+                val once = hasar[i]
+                hasar[i] = (hasar[i] + hasarOran * 0.05f * (0.35f + 0.65f * k)).coerceAtMost(1f)
+                hasarToplam += hasar[i] - once
+                isaretle(i)
+            }
+            if (kir[i] <= 0f) return@herCember
             var m = etki[tip[i].toInt()] * (0.35f + 0.65f * k)
             if (m <= 0f) return@herCember
             if (islak[i] > 0.3f) m *= islakBonus

@@ -486,6 +486,11 @@ class MainActivity : Activity() {
             Ses.titret(40)
             goster(Ekran.AYAR)
         }
+        dugme(if (kayit.grafik3d) "✨  3B Grafik: Açık" else "▫️  3B Grafik: Kapalı (2B)", 0xFF455A64.toInt(), Color.WHITE) {
+            kayit.grafik3d = !kayit.grafik3d
+            goster(Ekran.AYAR)
+        }
+        yazi("3B grafik halıyı gerçek zamanlı ışıkla çizer; telefonu eğince parlaklık değişir. Telefon ısınırsa ya da yavaşlarsa kapatın.", 12f, 0xFF90A4AE.toInt(), alt = 12)
         dugme("🎓  Eğitimi tekrar göster", 0xFF455A64.toInt(), Color.WHITE) {
             kayit.egitimGoruldu = false
             Toast.makeText(this@MainActivity, "Bir sonraki oyunda eğitim gösterilecek.", Toast.LENGTH_SHORT).show()
@@ -503,7 +508,7 @@ class MainActivity : Activity() {
                 .setNegativeButton("Vazgeç", null)
                 .show()
         }
-        yazi("Altın Halı · sürüm 0.3", 13f, 0xFF90A4AE.toInt(), alt = 16)
+        yazi("Altın Halı · sürüm 0.4", 13f, 0xFF90A4AE.toInt(), alt = 16)
         dugme("← Geri", 0x33FFFFFF, Color.WHITE) { goster(Ekran.MENU) }
     }
 
@@ -615,6 +620,11 @@ class MainActivity : Activity() {
         val zayif = Leke.values().filter { it.etki(det.profil) < 0.45f }
         yazi("✅ İyi geldiği: " + (iyi.joinToString(", ") { it.ad }.ifEmpty { "—" }), 14f, 0xFFA5D6A7.toInt(), alt = 4).gravity = Gravity.START
         yazi("❌ Zayıf kaldığı: " + (zayif.joinToString(", ") { it.ad }.ifEmpty { "—" }), 14f, 0xFFEF9A9A.toInt(), alt = 8).gravity = Gravity.START
+        val guvenlik = HaliTuru.values().joinToString("   ") { t ->
+            val h = t.hasarOrani(Alet.SUNGER, det)
+            "${t.emoji} ${t.ad.substringBefore(' ')}: " + when { h < 0.04f -> "güvenli"; h < 0.12f -> "dikkat"; else -> "SOLDURUR" }
+        }
+        yazi("🛡 Sünger ile: $guvenlik", 13f, 0xFFB3E5FC.toInt(), alt = 8).gravity = Gravity.START
         for (u in sonuc.uyarilar) yazi(u, 13f, 0xFFFFE082.toInt(), alt = 4).gravity = Gravity.START
         yazi("", 6f)
 

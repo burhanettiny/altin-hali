@@ -35,6 +35,10 @@ class Kayit(ctx: Context) {
         get() = p.getBoolean("ayar_titresim", true)
         set(v) = p.edit().putBoolean("ayar_titresim", v).apply()
 
+    var grafik3d: Boolean
+        get() = p.getBoolean("ayar_3d", true)
+        set(v) = p.edit().putBoolean("ayar_3d", v).apply()
+
     var egitimGoruldu: Boolean
         get() = p.getBoolean("egitim", false)
         set(v) = p.edit().putBoolean("egitim", v).apply()

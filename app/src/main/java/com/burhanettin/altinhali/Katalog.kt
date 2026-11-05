@@ -157,6 +157,34 @@ enum class Esya(val emoji: String, val agirlik: Int) {
     HAYALET("👻", 9),
 }
 
+/** Halı türleri: her biri farklı özen ister. */
+enum class HaliTuru(val ad: String, val emoji: String, val aciklama: String, val odulCarpani: Float) {
+    YUN("Yün Halı", "🐑", "Dayanıklı. Sadece çok güçlü asit ve sert fırça az da olsa yıpratır.", 1f),
+    SENTETIK("Sentetik Halı", "🧵", "Yağ lekesi kolay çıkar ama alkol (çözücü) halıyı eritir!", 0.9f),
+    IPEK("İpek Halı", "🧣", "Çok hassas! Sert fırça, güçlü asit ve oksijen renklerini soldurur.", 1.6f),
+    ANTIKA("Antika Halı", "🏺", "Çok değerli: hazinesi bol ama her hata pahalı. Nazik ol!", 2f),
+    ;
+
+    /** Bu alet ve deterjanla ovalarken halıya verilen hasar oranı. */
+    fun hasarOrani(alet: Alet, det: Deterjan): Float {
+        if (!alet.deterjanli) return 0f
+        val p = det.profil
+        fun fazla(o: Ozellik, esik: Float) = (p[o.ordinal] - esik).coerceAtLeast(0f)
+        val firca = alet == Alet.FIRCA
+        return when (this) {
+            YUN -> (if (firca) 0.03f else 0f) + fazla(Ozellik.ASIT, 1.6f) * 0.08f
+            SENTETIK -> (if (firca) 0.02f else 0f) + fazla(Ozellik.COZUCU, 0.5f) * 0.45f
+            IPEK -> (if (firca) 0.35f else 0.02f) + fazla(Ozellik.ASIT, 0.8f) * 0.28f +
+                fazla(Ozellik.OKSIJEN, 1.0f) * 0.28f + fazla(Ozellik.YAG, 1.2f) * 0.15f
+            ANTIKA -> (if (firca) 0.25f else 0.03f) + fazla(Ozellik.ASIT, 1.0f) * 0.2f +
+                fazla(Ozellik.OKSIJEN, 1.2f) * 0.2f + fazla(Ozellik.COZUCU, 0.8f) * 0.2f
+        }
+    }
+
+    /** Bu halıda bu leke için ek kolaylık. */
+    fun lekeCarpani(l: Leke): Float = if (this == SENTETIK && l == Leke.YAG) 1.6f else 1f
+}
+
 /** Halının üstündeki çöpler. */
 enum class CopTipi(val emoji: String, val boyut: Float) {
     MUZ("🍌", 2.6f), GAZETE("📰", 3.2f), KUTU("🥫", 2.4f), CORAP("🧦", 2.6f), YAPRAK("🍂", 2.3f),
@@ -275,6 +303,16 @@ object Katalog {
     fun lekeSayisi(seviye: Int): Int = if (seviye < 2) 0 else minOf(14, 1 + (seviye * 0.8f).toInt())
 
     fun copSayisi(seviye: Int): Int = minOf(10, 2 + seviye / 2)
+
+    fun haliTuru(seviye: Int): HaliTuru = when {
+        seviye >= 9 && seviye % 4 == 1 -> HaliTuru.ANTIKA
+        seviye >= 7 && seviye % 4 == 3 -> HaliTuru.IPEK
+        seviye >= 3 && seviye % 4 == 2 -> HaliTuru.SENTETIK
+        else -> HaliTuru.YUN
+    }
+
+    /** Hasar bu orana ulaşırsa halı mahvolur. */
+    const val HASAR_SINIRI = 0.22f
 
     fun sure(seviye: Int): Int =
         (50 + katman(seviye) * 16 + copSayisi(seviye) * 3f + lekeSayisi(seviye) * 4.5f).toInt()

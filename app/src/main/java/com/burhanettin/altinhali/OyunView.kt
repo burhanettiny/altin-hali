@@ -37,8 +37,18 @@ class OyunAyari(
 class OyunView(
     context: Context,
     private val ayar: OyunAyari,
+    private val renderer: HaliRenderer?,
     private val eylem: (String) -> Unit,
 ) : View(context), SensorEventListener {
+
+    /** 3B (OpenGL) çizim açık mı; açıksa zemin ve halı yüzeyi [renderer] tarafından çizilir. */
+    private var glAktif = renderer != null
+
+    /** OpenGL başarısız olursa 2B çizime dön. */
+    fun glBasarisiz() {
+        glAktif = false
+        invalidate()
+    }
 
     private enum class Durum { HAZIR, OYNUYOR, DURAKLADI, KUTLAMA, BITTI }
     private enum class Tur { NORMAL, HAZINE, INATCI }
@@ -56,6 +66,7 @@ class OyunView(
     private val d = resources.displayMetrics.density
     private val rnd = Random(ayar.tohum)
 
+    private val haliTuru = Katalog.haliTuru(seviye)
     private val tur = when {
         seviye % 5 == 0 -> Tur.HAZINE
         seviye >= 6 && seviye % 3 == 0 -> Tur.INATCI
@@ -79,9 +90,10 @@ class OyunView(
             var e = a.guc * a.carpan(l) * 0.3f / l.zorluk
             if (a.deterjanli) e *= l.etki(deterjan.profil)
             if (l != Leke.CAMUR && l != Leke.TOZ) e *= karakter.lekeUzmani
-            e
+            e * haliTuru.lekeCarpani(l)
         }
     }
+    private val hasarOranlari: Map<Alet, Float> = Alet.values().associateWith { haliTuru.hasarOrani(it, deterjan) }
 
     private var durum = Durum.HAZIR
     private val toplamSure = (Katalog.sure(seviye) + karakter.ekstraSure).toFloat()
@@ -133,6 +145,7 @@ class OyunView(
 
     // Sonuç
     private var kazandi = false
+    private var mahvoldu = false
     private var bonus = 0
     private var yildiz = 0
     private var rekor = 0
@@ -153,6 +166,12 @@ class OyunView(
     private val kirBmp = Bitmap.createBitmap(SUTUN, SATIR, Bitmap.Config.ARGB_8888)
     private val kopukBmp = Bitmap.createBitmap(SUTUN, SATIR, Bitmap.Config.ARGB_8888)
     private val islakBmp = Bitmap.createBitmap(SUTUN, SATIR, Bitmap.Config.ARGB_8888)
+    private val hasarBmp = Bitmap.createBitmap(SUTUN, SATIR, Bitmap.Config.ARGB_8888)
+    private val hasarPx = IntArray(SUTUN * SATIR)
+    private var esyaKirli = true
+    private var glKatmanKirli = true
+    private var isikX = -0.45f
+    private var isikY = -0.5f
     private val kirPx = IntArray(SUTUN * SATIR)
     private val kopukPx = IntArray(SUTUN * SATIR)
     private val islakPx = IntArray(SUTUN * SATIR)
@@ -235,16 +254,20 @@ class OyunView(
         hucre = hw / SUTUN
         copKutusu.set(hali.right - 58 * d, hali.bottom - 6 * d, hali.right - 6 * d, hali.bottom + 46 * d)
 
-        haliBmp?.recycle()
-        zeminBmp?.recycle()
-        tanecikBmp?.recycle()
-        kabarcikBmp?.recycle()
         val bw = hw.toInt().coerceAtLeast(1)
         val bh = hh.toInt().coerceAtLeast(1)
         haliBmp = HaliCizici.ciz(bw, bh, seviye)
         zeminBmp = HaliCizici.zeminCiz(w, h, hali, d)
         tanecikBmp = tanecikDokusu(bw / 2, bh / 2)
         kabarcikBmp = kabarcikDokusu(bw, bh)
+        renderer?.let { r ->
+            r.yogunluk = d
+            r.hali = floatArrayOf(hali.left, hali.top, hali.right, hali.bottom)
+            haliBmp?.let { r.haliVer(it) }
+            zeminBmp?.let { r.zeminVer(it) }
+        }
+        esyaKirli = true
+        glKatmanKirli = true
 
         // Saçaklar
         sacak.clear()
@@ -351,6 +374,11 @@ class OyunView(
         val z = e.values[2]
         val ivme = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
         if (ivme > 11f) silkele()
+        // Telefon eğildikçe ışık kayar (kadife parlaması ve cila yansıması değişir)
+        val hedefX = (-0.45f - x * 0.09f).coerceIn(-1f, 1f)
+        val hedefY = (-0.5f + (y - 6.5f) * 0.09f).coerceIn(-1f, 1f)
+        isikX += (hedefX - isikX) * 0.15f
+        isikY += (hedefY - isikY) * 0.15f
     }
 
     override fun onAccuracyChanged(s: Sensor?, a: Int) {}
@@ -433,6 +461,10 @@ class OyunView(
         if (sarsinti > 0) sarsinti = (sarsinti - dt).coerceAtLeast(0f)
 
         cizimleriGuncelle()
+        if (durum == Durum.OYNUYOR && tahta.hasarOrani >= Katalog.HASAR_SINIRI) {
+            mahvoldu = true
+            bitir(false)
+        }
         if (durum == Durum.OYNUYOR) {
             hazineleriKontrolEt()
             if (tahta.temizOran >= 0.965f) {
@@ -476,19 +508,37 @@ class OyunView(
         tahta.degisenler { i ->
             kirPx[i] = kirRengi(i)
             kopukPx[i] = kopukRengi(i)
+            val h = tahta.hasar[i]
+            hasarPx[i] = if (h <= 0f) Color.TRANSPARENT else Color.argb((h * 255).toInt().coerceIn(0, 255), 235, 224, 205)
             degisti = true
         }
-        if (degisti) {
-            kirBmp.setPixels(kirPx, 0, SUTUN, 0, 0, SUTUN, SATIR)
-            kopukBmp.setPixels(kopukPx, 0, SUTUN, 0, 0, SUTUN, SATIR)
-        }
+        var islakDegisti = false
         if (tahta.islakVar || islakCizili) {
             for (i in islakPx.indices) {
                 val w = tahta.islak[i]
                 islakPx[i] = if (w <= 0f) Color.TRANSPARENT else Color.argb((w * 120).toInt(), 12, 18, 30)
             }
-            islakBmp.setPixels(islakPx, 0, SUTUN, 0, 0, SUTUN, SATIR)
             islakCizili = tahta.islakVar
+            islakDegisti = true
+        }
+        if (glAktif && renderer != null) {
+            if (degisti || islakDegisti || glKatmanKirli) {
+                // Islaklık alfasını 3B için tam ölçeğe çıkar
+                renderer.katmanlar(SUTUN, SATIR, kirPx, kopukPx, islakPx, hasarPx)
+                glKatmanKirli = false
+            }
+            if (esyaKirli) {
+                esyaKirli = false
+                esyaKatmaniGonder()
+            }
+        } else {
+            if (degisti || glKatmanKirli) {
+                kirBmp.setPixels(kirPx, 0, SUTUN, 0, 0, SUTUN, SATIR)
+                kopukBmp.setPixels(kopukPx, 0, SUTUN, 0, 0, SUTUN, SATIR)
+                hasarBmp.setPixels(hasarPx, 0, SUTUN, 0, 0, SUTUN, SATIR)
+                glKatmanKirli = false
+            }
+            if (islakDegisti) islakBmp.setPixels(islakPx, 0, SUTUN, 0, 0, SUTUN, SATIR)
         }
     }
 
@@ -519,6 +569,19 @@ class OyunView(
             (Color.green(r) * t).toInt().coerceIn(0, 255),
             (Color.blue(r) * t).toInt().coerceIn(0, 255),
         )
+    }
+
+    /** Kirin altındaki hazineleri 3B halı dokusuna (yarım çözünürlük) çizer. */
+    private fun esyaKatmaniGonder() {
+        val r = renderer ?: return
+        val w = (hali.width() / 2).toInt().coerceAtLeast(1)
+        val h = (hali.height() / 2).toInt().coerceAtLeast(1)
+        val b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val c = Canvas(b)
+        c.scale(0.5f, 0.5f)
+        c.translate(-hali.left, -hali.top)
+        for (hz in tahta.hazineler) if (!hz.toplandi) hazineCiz(c, hz, 255, 1f)
+        r.esyaVer(b)
     }
 
     private fun robotuGezdir(dt: Float) {
@@ -660,7 +723,7 @@ class OyunView(
     private val komboCarpani get() = (1f + (kombo - 1) * 0.2f).coerceIn(1f, 2f)
 
     private fun altinVer(miktar: Int, x: Float, y: Float, kombolu: Boolean = false) {
-        var m = miktar * karakter.altinCarpani * (1f + deterjan.altinBonus)
+        var m = miktar * karakter.altinCarpani * (1f + deterjan.altinBonus) * haliTuru.odulCarpani
         if (carpanSure > 0) m *= 2
         if (kombolu) m *= komboCarpani
         if (!sureli) m *= 0.5f
@@ -688,6 +751,7 @@ class OyunView(
 
     private fun topla(h: Hazine, miknatis: Boolean = false) {
         h.toplandi = true
+        esyaKirli = true
         val x = gx(h.x)
         val y = gy(h.y)
         when (h.tip) {
@@ -808,15 +872,19 @@ class OyunView(
                     gecen.toInt(), toplanan, kazandi),
             )
         } else if (kazandi && sureli) {
-            bonus = (kalan * 3f * karakter.altinCarpani).toInt()
-            kayit.altin += bonus
-            kayit.istatEkle("altin", bonus)
+            bonus = (kalan * 3f * karakter.altinCarpani * haliTuru.odulCarpani).toInt()
             val oran = kalan / toplamSure
             yildiz = when {
                 oran >= 0.45f -> 3
                 oran >= 0.2f -> 2
                 else -> 1
             }
+            val hasarYuzde = tahta.hasarOrani / Katalog.HASAR_SINIRI
+            if (hasarYuzde > 0.6f) yildiz -= 2 else if (hasarYuzde > 0.25f) yildiz -= 1
+            yildiz = yildiz.coerceAtLeast(1)
+            bonus = (bonus * (1f - hasarYuzde.coerceIn(0f, 1f) * 0.8f)).toInt()
+            kayit.altin += bonus
+            kayit.istatEkle("altin", bonus)
             kayit.yildizKaydet(seviye, yildiz)
             if (kayit.seviye == seviye) kayit.seviye = seviye + 1
             kayit.istatEkle("bolum")
@@ -1159,7 +1227,10 @@ class OyunView(
         var ses = ""
         when (alet) {
             Alet.SUNGER, Alet.FIRCA -> {
-                val n = tahta.ovala(bx, by, rg, etki, deterjan.kopuk / karakter.durulama, 1.35f)
+                val n = tahta.ovala(bx, by, rg, etki, deterjan.kopuk / karakter.durulama, 1.35f, hasarOranlari.getValue(alet))
+                if (hasarOranlari.getValue(alet) > 0.08f) {
+                    ipucu("hasar_${alet.name}", if (alet == Alet.FIRCA) "Dikkat! ${haliTuru.ad} sert fırçadan yıpranıyor." else "Dikkat! Bu deterjan ${haliTuru.ad} için fazla sert, renkleri soldurur!")
+                }
                 if (n > 0) ses = "ovala"
                 if (tahta.ortulu(bx, by)) ipucu("ortu", "Çöpün altı temizlenmez! Önce 🥢 cımbızla al.")
                 tahta.lekeAt(bx, by)?.let { l ->
@@ -1257,34 +1328,48 @@ class OyunView(
         sonZaman = simdi
         guncelle(dt)
 
-        zeminBmp?.let { c.drawBitmap(it, 0f, 0f, null) } ?: c.drawColor(0xFF4E342E.toInt())
-        c.save()
+        var kx = 0f
+        var ky = 0f
         if (sarsinti > 0) {
             val g = sarsinti * 30f * d
-            c.translate((rnd.nextFloat() - 0.5f) * g, (rnd.nextFloat() - 0.5f) * g)
+            kx = (rnd.nextFloat() - 0.5f) * g
+            ky = (rnd.nextFloat() - 0.5f) * g
         }
         if (silkeAnim > 0) {
             val t = silkeAnim / 0.45f
-            c.translate(0f, sin(t * 18f) * 10f * d * t)
+            ky += sin(t * 18f) * 10f * d * t
         }
+        renderer?.let { r ->
+            r.kaydirX = kx
+            r.kaydirY = ky
+            r.isikX = isikX
+            r.isikY = isikY
+            r.zaman = animZaman
+            r.dalga = (silkeAnim / 0.45f).coerceIn(0f, 1f)
+        }
+        if (!glAktif) zeminBmp?.let { c.drawBitmap(it, 0f, 0f, null) } ?: c.drawColor(0xFF4E342E.toInt())
+        c.save()
+        c.translate(kx, ky)
         sacakCiz(c)
-        haliBmp?.let { c.drawBitmap(it, hali.left, hali.top, null) }
-        c.drawBitmap(islakBmp, null, hali, bmpBoya)
+        if (!glAktif) {
+            haliBmp?.let { c.drawBitmap(it, hali.left, hali.top, null) }
+            c.drawBitmap(islakBmp, null, hali, bmpBoya)
+            for (h in tahta.hazineler) if (!h.toplandi) hazineCiz(c, h, 255, 1f)
+            c.drawBitmap(hasarBmp, null, hali, bmpBoya)
 
-        for (h in tahta.hazineler) if (!h.toplandi) hazineCiz(c, h, 255, 1f)
+            // Kir: renk katmanı + tanecik dokusu (yalnızca kirli yerlere)
+            val kat1 = c.saveLayer(hali, null)
+            c.drawBitmap(kirBmp, null, hali, bmpBoya)
+            tanecikBmp?.let { c.drawBitmap(it, null, hali, ustBoya) }
+            c.restoreToCount(kat1)
 
-        // Kir: renk katmanı + tanecik dokusu (yalnızca kirli yerlere)
-        val kat1 = c.saveLayer(hali, null)
-        c.drawBitmap(kirBmp, null, hali, bmpBoya)
-        tanecikBmp?.let { c.drawBitmap(it, null, hali, ustBoya) }
-        c.restoreToCount(kat1)
-
-        // Köpük: renk + kabarcık dokusu
-        if (tahta.kopukluSayisi > 0) {
-            val kat2 = c.saveLayer(hali, null)
-            c.drawBitmap(kopukBmp, null, hali, bmpBoya)
-            kabarcikBmp?.let { c.drawBitmap(it, null, hali, ustBoya) }
-            c.restoreToCount(kat2)
+            // Köpük: renk + kabarcık dokusu
+            if (tahta.kopukluSayisi > 0) {
+                val kat2 = c.saveLayer(hali, null)
+                c.drawBitmap(kopukBmp, null, hali, bmpBoya)
+                kabarcikBmp?.let { c.drawBitmap(it, null, hali, ustBoya) }
+                c.restoreToCount(kat2)
+            }
         }
 
         for (cp in tahta.coplar) if (!cp.atildi && !cp.tutuluyor) copCiz(c, cp, 1f, 255)
@@ -1609,11 +1694,24 @@ class OyunView(
         yaziBoya.color = Color.WHITE
         c.drawText("%${(oran * 100).toInt()} temiz", (sol + sag) / 2, by1 - 5 * d, yaziBoya)
 
+        // Hasar çubuğu (ince, ilerleme çubuğunun altında)
+        val hasarYuzde = (tahta.hasarOrani / Katalog.HASAR_SINIRI).coerceIn(0f, 1f)
+        if (hasarYuzde > 0.005f || haliTuru == HaliTuru.IPEK || haliTuru == HaliTuru.ANTIKA) {
+            val hy0 = by1 + 3 * d
+            boya.color = 0xFF3E2723.toInt()
+            c.drawRoundRect(sol, hy0, sag, hy0 + 5 * d, 3 * d, 3 * d, boya)
+            if (hasarYuzde > 0f) {
+                boya.color = if (hasarYuzde > 0.6f && (gecen * 4).toInt() % 2 == 0) 0xFFFF1744.toInt() else 0xFFE57373.toInt()
+                c.drawRoundRect(sol, hy0, sol + (sag - sol) * hasarYuzde, hy0 + 5 * d, 3 * d, 3 * d, boya)
+            }
+        }
+
         yaziBoya.textSize = 12f * d
         yaziBoya.color = 0xFFB0BEC5.toInt()
         val bas = if (yaris) "${ayar.oyuncu}" else "Bölüm $seviye"
         val turYazi = turAdi()?.let { " · $it" } ?: ""
-        c.drawText("$bas$turYazi · ${deterjan.emoji} ${deterjan.ad} · ${karakter.emoji}", ustPanel.centerX(), ustPanel.bottom - 11 * d, yaziBoya)
+        val hasarYazi = if (hasarYuzde > 0.005f) " · hasar %${(hasarYuzde * 100).toInt()}" else ""
+        c.drawText("$bas$turYazi · ${haliTuru.emoji} ${haliTuru.ad}$hasarYazi · ${deterjan.emoji}", ustPanel.centerX(), ustPanel.bottom - 9 * d, yaziBoya)
     }
 
     private fun duraklatDugmesiCiz(c: Canvas) {
@@ -1740,9 +1838,9 @@ class OyunView(
         } else {
             yaziBoya.color = Color.WHITE
             yaziBoya.textSize = 30f * d
-            c.drawText("Bölüm $seviye", cx, cy - 120 * d, yaziBoya)
+            c.drawText("Bölüm $seviye", cx, cy - 140 * d, yaziBoya)
             // Acı Dede işi verir
-            konusmaBalonu(c, "👴 Acı Dede: $dedeSozu", cx, cy - 78 * d)
+            konusmaBalonu(c, "👴 Acı Dede: $dedeSozu", cx, cy - 98 * d)
         }
 
         turAdi()?.let {
@@ -1751,6 +1849,10 @@ class OyunView(
             val aciklama = if (tur == Tur.HAZINE) "🏆 $it: neredeyse iki kat hazine!" else "🦠 $it: temizlemezsen geri yayılır!"
             c.drawText(aciklama, cx, cy - 40 * d, yaziBoya)
         }
+
+        yaziBoya.textSize = 14f * d
+        yaziBoya.color = if (haliTuru == HaliTuru.YUN) 0xFFCFD8DC.toInt() else 0xFFFFE082.toInt()
+        c.drawText("${haliTuru.emoji} ${haliTuru.ad}: ${haliTuru.aciklama}".let { if (yaziBoya.measureText(it) > width - 24 * d) "${haliTuru.emoji} ${haliTuru.ad} — dikkatli ol!" else it }, cx, cy - 60 * d, yaziBoya)
 
         // Lekeler
         val zorlu = tahta.lekeTurleri.filter { it != Leke.CAMUR && it != Leke.TOZ }
@@ -1823,6 +1925,7 @@ class OyunView(
         yaziBoya.textAlign = Paint.Align.CENTER
 
         val baslik = when {
+            mahvoldu -> "Halı Mahvoldu!"
             yaris -> if (kazandi) "${ayar.oyuncu} bitirdi!" else "${ayar.oyuncu}: süre doldu"
             kazandi && sureli -> "Bölüm $seviye Tamam!"
             kazandi -> "Tertemiz!"
@@ -1859,7 +1962,9 @@ class OyunView(
         // Acı Dede'nin yorumu
         if (!yaris) {
             val soz = when {
+                mahvoldu -> "Halımı soldurdun! Ah benim güzel halım..."
                 !kazandi -> "Bu halı mı temiz? Bir daha!"
+                tahta.hasarOrani / Katalog.HASAR_SINIRI > 0.25f -> "Temiz ama yer yer solmuş. Dikkat et!"
                 !sureli -> "Eline sağlık evladım."
                 yildiz == 3 -> "Maşallah, pırıl pırıl! Al şu bahşişi."
                 yildiz == 2 -> "Fena değil... ama köşelere bak."
@@ -1891,6 +1996,8 @@ class OyunView(
         satir("Bulunan altın", "+${(toplanan * say).toInt()}", 0xFFFFD54F.toInt())
         if (kazandi && sureli && !yaris) satir("Hız bonusu", "+${(bonus * say).toInt()}", 0xFFFFD54F.toInt())
         satir("En iyi kombo", if (enIyiKombo >= 2) "🔥 x$enIyiKombo" else "—")
+        val hy = (tahta.hasarOrani / Katalog.HASAR_SINIRI * 100).toInt().coerceAtMost(100)
+        if (hy > 0) satir("Halı hasarı", "%$hy", if (hy > 25) 0xFFEF5350.toInt() else 0xFFFFCC80.toInt())
         if (!yaris) satir("Kasadaki altın", "💰 ${kayit.altin}")
 
         yaziBoya.textAlign = Paint.Align.CENTER
@@ -1903,7 +2010,10 @@ class OyunView(
         if (!kazandi && !yaris) {
             yaziBoya.textSize = 13f * d
             yaziBoya.color = 0xFF90A4AE.toInt()
-            c.drawText("İpucu: Lekeye uygun deterjan ya da 🧪 formül kullan.", cx, y + 4 * d, yaziBoya)
+            c.drawText(
+                if (mahvoldu) "İpucu: Hassas halıda sünger ve yumuşak formül kullan." else "İpucu: Lekeye uygun deterjan ya da 🧪 formül kullan.",
+                cx, y + 4 * d, yaziBoya,
+            )
         }
 
         for (b in menuDugmeleri) dugmeCiz(c, b)

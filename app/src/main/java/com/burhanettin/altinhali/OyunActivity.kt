@@ -1,6 +1,10 @@
 package com.burhanettin.altinhali
 
 import android.app.Activity
+import android.app.ActivityManager
+import android.content.Context
+import android.opengl.GLSurfaceView
+import android.widget.FrameLayout
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -9,6 +13,7 @@ import android.view.WindowManager
 class OyunActivity : Activity() {
 
     private lateinit var oyun: OyunView
+    private var glGorunum: GLSurfaceView? = null
     private var sureli = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +27,25 @@ class OyunActivity : Activity() {
         } else {
             OyunAyari(sureli = sureli, seviye = Kayit(this).seviye, tohum = System.nanoTime())
         }
-        oyun = OyunView(this, ayar) { eylem ->
+        // 3B: cihaz OpenGL ES 3.0 destekliyorsa ve ayarlarda açıksa
+        val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val gl3 = am.deviceConfigurationInfo.reqGlEsVersion >= 0x30000
+        var renderer: HaliRenderer? = null
+        if (gl3 && Kayit(this).grafik3d) {
+            renderer = HaliRenderer(applicationContext) { _ ->
+                runOnUiThread {
+                    oyun.glBasarisiz()
+                    glGorunum?.visibility = android.view.View.GONE
+                }
+            }
+            glGorunum = GLSurfaceView(this).apply {
+                setEGLContextClientVersion(3)
+                preserveEGLContextOnPause = true
+                setRenderer(renderer)
+                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            }
+        }
+        oyun = OyunView(this, ayar, renderer) { eylem ->
             when (eylem) {
                 "tekrar" -> yeniden(yaris)
                 "yaris_sonuc" -> {
@@ -36,7 +59,10 @@ class OyunActivity : Activity() {
                 else -> finish()
             }
         }
-        setContentView(oyun)
+        val kok = FrameLayout(this)
+        glGorunum?.let { kok.addView(it, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)) }
+        kok.addView(oyun, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        setContentView(kok)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -57,6 +83,12 @@ class OyunActivity : Activity() {
     override fun onPause() {
         super.onPause()
         oyun.duraklat()
+        glGorunum?.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        glGorunum?.onResume()
     }
 
     @Deprecated("Deprecated in Java")
