@@ -19,6 +19,10 @@ android {
         versionName = "0.5"
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     signingConfigs {
         if (anahtarDosyasi != null) {
             create("yayin") {
@@ -30,10 +34,20 @@ android {
         }
     }
 
+    // Reklam birimleri: deneme (debug) APK'sı HER ZAMAN Google'ın test reklamlarını gösterir,
+    // böylece kendi telefonunda denerken AdMob hesabın risk altına girmez.
+    // Gerçek reklamlar yalnızca Play Store'a giden imzalı sürümde (release) gösterilir.
     buildTypes {
+        debug {
+            buildConfigField("String", "ODULLU_BIRIM", "\"ca-app-pub-3940256099942544/5224354917\"")
+            buildConfigField("String", "GECIS_BIRIM", "\"ca-app-pub-3940256099942544/1033173712\"")
+        }
         release {
             isMinifyEnabled = false
             if (anahtarDosyasi != null) signingConfig = signingConfigs.getByName("yayin")
+            buildConfigField("String", "ODULLU_BIRIM", "\"ca-app-pub-1492578593198235/6137928629\"")
+            // Geçiş reklam birimi henüz oluşturulmadı: boşken geçiş reklamı gösterilmez.
+            buildConfigField("String", "GECIS_BIRIM", "\"\"")
         }
     }
     compileOptions {

@@ -20,9 +20,9 @@ import com.google.android.ump.UserMessagingPlatform
 /**
  * Google AdMob reklamları.
  *
- * UYGULAMA KİMLİĞİ GERÇEK (manifest); REKLAM BİRİMLERİ HENÜZ GOOGLE'IN TEST BİRİMLERİ: yalnızca "Test Ad" etiketli deneme reklamları
- * görünür ve para kazandırmaz. Yayına çıkarken AdMob hesabındaki kendi kimliklerini aşağıya ve
- * AndroidManifest.xml'deki APPLICATION_ID'ye yaz (bkz. YAYIN.md). Kendi reklamına asla kendin tıklama.
+ * Uygulama kimliği AndroidManifest.xml'de. Reklam birimleri app/build.gradle.kts'te:
+ * deneme (debug) APK'sı her zaman Google'ın "Test Ad" reklamlarını gösterir, gerçek reklamlar
+ * yalnızca Play Store'a giden imzalı sürümdedir. Kendi reklamına asla tıklama.
  *
  * Reklamlar oyunu bölmez: ödüllü reklamlar tamamen isteğe bağlıdır (oyuncu ödül için kendisi seçer),
  * geçiş reklamı ise en erken 6. bölümden sonra, en fazla 3 bölümde bir ve 3 dakikada bir gösterilir.
@@ -31,9 +31,8 @@ object Reklam {
     /** Reklamları tamamen kapatmak için false yap. */
     const val ACIK = true
 
-    // Google'ın herkese açık TEST reklam birimleri
-    private const val ODULLU_BIRIM = "ca-app-pub-3940256099942544/5224354917"
-    private const val GECIS_BIRIM = "ca-app-pub-3940256099942544/1033173712"
+    private val ODULLU_BIRIM: String = BuildConfig.ODULLU_BIRIM
+    private val GECIS_BIRIM: String = BuildConfig.GECIS_BIRIM
 
     private var basladi = false
     private var odullu: RewardedAd? = null
@@ -95,7 +94,7 @@ object Reklam {
                 }
             })
         }
-        if (gecis == null && !gecisYukleniyor) {
+        if (gecis == null && !gecisYukleniyor && GECIS_BIRIM.isNotEmpty()) {
             gecisYukleniyor = true
             InterstitialAd.load(c, GECIS_BIRIM, AdRequest.Builder().build(), object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
