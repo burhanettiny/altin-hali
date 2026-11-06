@@ -74,13 +74,13 @@ object Ses {
         }.start()
     }
 
+    /** Ses kapalıyken müzik de dahil her şey susar; müzik ayrıca kendi ayarıyla kapatılabilir. */
     fun ayarla(ses: Boolean, tit: Boolean, muzik: Boolean = muzikAcik) {
         acik = ses
         titresim = tit
-        val onceki = muzikAcik
         muzikAcik = muzik
-        if (onceki && !muzik) muzikSustur()
-        if (!onceki && muzik && muzikIstek) muzikCal()
+        if (!ses) havuz?.autoPause() else havuz?.autoResume()
+        if (!ses || !muzik) muzikSustur() else if (muzikIstek) muzikCal()
     }
 
     /** Arka plan müziğini döngüde çalar (etkinlik öne gelince çağrılır). */
@@ -100,7 +100,7 @@ object Ses {
     }
 
     private fun muzikCal() {
-        if (!muzikAcik || muzikAkis != 0) return
+        if (!acik || !muzikAcik || muzikAkis != 0) return
         val h = havuz ?: return
         val id = synchronized(idler) { idler["muzik"] } ?: return
         if (synchronized(hazir) { id !in hazir }) return
