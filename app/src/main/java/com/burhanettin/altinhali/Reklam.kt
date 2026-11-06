@@ -20,7 +20,7 @@ import com.google.android.ump.UserMessagingPlatform
 /**
  * Google AdMob reklamları.
  *
- * ŞU AN GOOGLE'IN RESMİ TEST KİMLİKLERİ KULLANILIYOR: yalnızca "Test Ad" etiketli deneme reklamları
+ * UYGULAMA KİMLİĞİ GERÇEK (manifest); REKLAM BİRİMLERİ HENÜZ GOOGLE.IN TEST BİRİMLERİ: yalnızca "Test Ad" etiketli deneme reklamları
  * görünür ve para kazandırmaz. Yayına çıkarken AdMob hesabındaki kendi kimliklerini aşağıya ve
  * AndroidManifest.xml'deki APPLICATION_ID'ye yaz (bkz. YAYIN.md). Kendi reklamına asla kendin tıklama.
  *
