@@ -77,7 +77,7 @@ Bundan sonra her derlemede Actions sayfasında **`altin-hali-play-store-aab`** a
    - **Geçiş** → `ca-app-pub-XXXX/BBBB`
 5. Kimlikleri koda yaz (ya da bana gönder, ben yazayım):
    - `app/src/main/AndroidManifest.xml` → `APPLICATION_ID` değeri ✅ (eklendi)
-   - `app/build.gradle.kts` → `release` bölümündeki `ODULLU_BIRIM` ✅ (eklendi) ve `GECIS_BIRIM` (bekleniyor)
+   - `app/build.gradle.kts` → `release` bölümündeki `ODULLU_BIRIM` ✅ (eklendi) ve `GECIS_BIRIM` ✅ (eklendi)
    - Deneme APK'sı (debug) bilerek her zaman Google'ın test reklamlarını gösterir; gerçek reklamlar yalnızca Play Store sürümündedir.
 6. AdMob'da **Gizlilik ve mesajlaşma → GDPR** mesajını oluştur ve yayınla (Avrupa'daki oyuncular için izin formu; kodu hazır).
 7. Oyun Play'de yayınlanınca AdMob'da uygulamayı Play mağaza kaydına bağla ve `app-ads.txt` dosyasını kur (AdMob adım adım gösterir).

@@ -46,8 +46,7 @@ android {
             isMinifyEnabled = false
             if (anahtarDosyasi != null) signingConfig = signingConfigs.getByName("yayin")
             buildConfigField("String", "ODULLU_BIRIM", "\"ca-app-pub-1492578593198235/6137928629\"")
-            // Geçiş reklam birimi henüz oluşturulmadı: boşken geçiş reklamı gösterilmez.
-            buildConfigField("String", "GECIS_BIRIM", "\"\"")
+            buildConfigField("String", "GECIS_BIRIM", "\"ca-app-pub-1492578593198235/6033986847\"")
         }
     }
     compileOptions {
