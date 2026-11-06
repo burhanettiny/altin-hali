@@ -6,9 +6,11 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.widget.FrameLayout
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import android.window.OnBackInvokedDispatcher
 
 class OyunActivity : Activity() {
 
@@ -73,6 +75,10 @@ class OyunActivity : Activity() {
         glGorunum?.let { kok.addView(it, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)) }
         kok.addView(oyun, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
         setContentView(kok)
+        // Android 13+ (ve Android 16'yı hedefleyen uygulamalarda zorunlu): yeni geri hareketi
+        if (Build.VERSION.SDK_INT >= 33) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) { geri() }
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -105,7 +111,9 @@ class OyunActivity : Activity() {
     }
 
     @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
+    override fun onBackPressed() = geri()
+
+    private fun geri() {
         if (!oyun.geriBasildi()) finish()
     }
 

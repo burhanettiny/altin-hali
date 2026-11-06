@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import android.window.OnBackInvokedDispatcher
 import java.util.TimeZone
 
 /** Ana menü, mağaza, karakterler, başarımlar ve ayarlar (hepsi koddan kurulur, XML yok). */
@@ -49,6 +51,18 @@ class MainActivity : Activity() {
         kok = FrameLayout(this)
         kok.addView(MenuArka(this), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         setContentView(kok)
+        // Kenardan kenara ekran: menü içeriği durum çubuğunun ve gezinme çubuğunun altında kalmasın
+        kok.setOnApplyWindowInsetsListener { v, ic ->
+            if (Build.VERSION.SDK_INT >= 30) {
+                val b = ic.getInsets(android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout())
+                v.setPadding(b.left, b.top, b.right, b.bottom)
+            } else {
+                @Suppress("DEPRECATION")
+                v.setPadding(ic.systemWindowInsetLeft, ic.systemWindowInsetTop, ic.systemWindowInsetRight, ic.systemWindowInsetBottom)
+            }
+            ic
+        }
+        geriKaydet()
         if (intent.getBooleanExtra(EK_YARIS_SONUC, false)) ekran = Ekran.YARIS_SONUC
     }
 
@@ -78,14 +92,18 @@ class MainActivity : Activity() {
         Ses.muzikDurdur()
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (ekran != Ekran.MENU) {
-            goster(Ekran.MENU)
-        } else {
-            @Suppress("DEPRECATION")
-            super.onBackPressed()
+    // Android 13+ (ve Android 16'yı hedefleyen uygulamalarda zorunlu): yeni geri hareketi
+    private fun geriKaydet() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) { geri() }
         }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() = geri()
+
+    private fun geri() {
+        if (ekran != Ekran.MENU) goster(Ekran.MENU) else finish()
     }
 
     private fun goster(e: Ekran) {
@@ -560,7 +578,7 @@ class MainActivity : Activity() {
                 .setNegativeButton("Vazgeç", null)
                 .show()
         }
-        yazi("Altın Halı · sürüm 0.5", 13f, 0xFF90A4AE.toInt(), alt = 16)
+        yazi("Altın Halı · sürüm 0.6", 13f, 0xFF90A4AE.toInt(), alt = 16)
         dugme("← Geri", 0x33FFFFFF, Color.WHITE) { goster(Ekran.MENU) }
     }
 

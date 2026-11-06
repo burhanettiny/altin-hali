@@ -8,15 +8,15 @@ val anahtarDosyasi: String? = System.getenv("ANAHTAR_DOSYASI")
 
 android {
     namespace = "com.burhanettin.altinhali"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.burhanettin.altinhali"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         // Her GitHub derlemesinde artar (Play Store her yüklemede daha büyük sürüm kodu ister)
         versionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0) + 10
-        versionName = "0.5"
+        versionName = "0.6"
     }
 
     buildFeatures {
