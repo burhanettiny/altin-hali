@@ -21,7 +21,7 @@ import java.util.TimeZone
 /** Ana menü, mağaza, karakterler, başarımlar ve ayarlar (hepsi koddan kurulur, XML yok). */
 class MainActivity : Activity() {
 
-    private enum class Ekran { MENU, MAGAZA, KARAKTER, BASARIM, AYAR, LAB, YARIS, YARIS_SONUC }
+    private enum class Ekran { MENU, MAGAZA, KARAKTER, BASARIM, AYAR, LAB, YARIS, YARIS_SONUC, BOLUMLER }
 
     private lateinit var kayit: Kayit
     private lateinit var kok: FrameLayout
@@ -67,8 +67,15 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        Ses.muzikBaslat(0.25f)
+        Reklam.baslat(this)
         goster(ekran)
         if (ekran == Ekran.MENU) gunlukOdul()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Ses.muzikDurdur()
     }
 
     @Deprecated("Deprecated in Java")
@@ -92,6 +99,7 @@ class MainActivity : Activity() {
             Ekran.LAB -> lab()
             Ekran.YARIS -> yarisKur()
             Ekran.YARIS_SONUC -> yarisSonuc()
+            Ekran.BOLUMLER -> bolumler()
         }
     }
 
@@ -131,6 +139,19 @@ class MainActivity : Activity() {
             .setMessage("$takvim\n\n💰 +$odul altın$ek\n\nHer gün gel, ödül büyüsün! 7. gün en büyük ödül seni bekliyor.")
             .setPositiveButton("Topla") { _, _ -> goster(Ekran.MENU) }
             .setCancelable(false)
+            .apply {
+                if (Reklam.odulHazir()) {
+                    setNeutralButton("📺 2 katına çıkar") { _, _ ->
+                        val gosterildi = Reklam.odulluGoster(this@MainActivity) {
+                            kayit.altin += odul
+                            Ses.cal("kese", 0.9f)
+                            Toast.makeText(this@MainActivity, "🎁 Günlük ödül 2 katına çıktı: +$odul", Toast.LENGTH_SHORT).show()
+                            goster(Ekran.MENU)
+                        }
+                        if (!gosterildi) goster(Ekran.MENU)
+                    }
+                }
+            }
             .show()
     }
 
@@ -293,8 +314,12 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun oyna(sureli: Boolean) {
-        startActivity(Intent(this, OyunActivity::class.java).putExtra(OyunActivity.EK_SURELI, sureli))
+    private fun oyna(sureli: Boolean, seviye: Int = kayit.seviye) {
+        startActivity(
+            Intent(this, OyunActivity::class.java)
+                .putExtra(OyunActivity.EK_SURELI, sureli)
+                .putExtra(OyunActivity.EK_SEVIYE, seviye),
+        )
     }
 
     // ------------------------------------------------------------ ekranlar
@@ -319,6 +344,7 @@ class MainActivity : Activity() {
             else -> ""
         }
         dugme("▶  Oyna — Bölüm $sv$ozel", boyut = 20f) { oyna(true) }
+        dugme("🗺  Bölüm Haritası", 0xFF9575CD.toInt(), 0xFF1A0F33.toInt()) { goster(Ekran.BOLUMLER) }
         dugme("🧘  Rahat Mod  (süre yok)", 0xFF4FC3F7.toInt(), 0xFF0D2A3A.toInt()) { oyna(false) }
         dugme("🏁  Yarışma  (2–4 kişi)", 0xFFFF7043.toInt(), 0xFF3A1206.toInt()) { goster(Ekran.YARIS) }
         dugme("🛒  Mağaza", 0xFF81C784.toInt(), 0xFF0F2E12.toInt()) { goster(Ekran.MAGAZA) }
@@ -385,6 +411,24 @@ class MainActivity : Activity() {
         dugme("🧪  Formül Laboratuvarı", 0xFF4DB6AC.toInt(), 0xFF06302B.toInt(), 16f) { labMiktar = null; goster(Ekran.LAB) }
 
         bolumBasligi("Güçlendiriciler (oyun içinde kullanılır)")
+        val bekleme = 4 * 60 * 60 * 1000L
+        val kalanMs = kayit.sonBedavaGuc + bekleme - System.currentTimeMillis()
+        if (Reklam.ACIK) {
+            if (kalanMs <= 0 && Reklam.odulHazir()) {
+                dugme("📺  Reklam izle: bedava güçlendirici", 0xFF26A69A.toInt(), Color.WHITE, 16f) {
+                    Reklam.odulluGoster(this@MainActivity) {
+                        val g = Katalog.guclendiriciler.random()
+                        kayit.adetEkle(g.id, 1)
+                        kayit.sonBedavaGuc = System.currentTimeMillis()
+                        Ses.cal("satin", 0.8f)
+                        Toast.makeText(this@MainActivity, "Bedava: +1 ${g.emoji} ${g.ad}", Toast.LENGTH_SHORT).show()
+                        goster(Ekran.MAGAZA)
+                    }
+                }
+            } else if (kalanMs > 0) {
+                yazi("📺 Sonraki bedava güçlendirici: ${kalanMs / 3_600_000} sa ${(kalanMs / 60_000) % 60} dk sonra", 13f, 0xFF80CBC4.toInt(), alt = 10)
+            }
+        }
         for (g in Katalog.guclendiriciler) {
             kart(
                 g.emoji, g.ad, g.aciklama,
@@ -480,6 +524,11 @@ class MainActivity : Activity() {
             Ses.ayarla(kayit.sesAcik, kayit.titresimAcik)
             goster(Ekran.AYAR)
         }
+        dugme(if (kayit.muzikAcik) "🎵  Müzik: Açık" else "🎵  Müzik: Kapalı", 0xFF455A64.toInt(), Color.WHITE) {
+            kayit.muzikAcik = !kayit.muzikAcik
+            Ses.ayarla(kayit.sesAcik, kayit.titresimAcik, kayit.muzikAcik)
+            goster(Ekran.AYAR)
+        }
         dugme(if (kayit.titresimAcik) "📳  Titreşim: Açık" else "📴  Titreşim: Kapalı", 0xFF455A64.toInt(), Color.WHITE) {
             kayit.titresimAcik = !kayit.titresimAcik
             Ses.ayarla(kayit.sesAcik, kayit.titresimAcik)
@@ -495,6 +544,9 @@ class MainActivity : Activity() {
             kayit.egitimGoruldu = false
             Toast.makeText(this@MainActivity, "Bir sonraki oyunda eğitim gösterilecek.", Toast.LENGTH_SHORT).show()
         }
+        if (Reklam.gizlilikSecenegiGerekli()) {
+            dugme("🔒  Reklam ve gizlilik tercihleri", 0xFF455A64.toInt(), Color.WHITE) { Reklam.gizlilikFormu(this@MainActivity) }
+        }
         dugme("🗑  İlerlemeyi sıfırla", 0xFFC62828.toInt(), Color.WHITE) {
             AlertDialog.Builder(this@MainActivity)
                 .setTitle("Emin misin?")
@@ -508,7 +560,7 @@ class MainActivity : Activity() {
                 .setNegativeButton("Vazgeç", null)
                 .show()
         }
-        yazi("Altın Halı · sürüm 0.4", 13f, 0xFF90A4AE.toInt(), alt = 16)
+        yazi("Altın Halı · sürüm 0.5", 13f, 0xFF90A4AE.toInt(), alt = 16)
         dugme("← Geri", 0x33FFFFFF, Color.WHITE) { goster(Ekran.MENU) }
     }
 
@@ -770,6 +822,53 @@ class MainActivity : Activity() {
             Yaris.bitir()
             goster(Ekran.MENU)
         }
+    }
+
+    // ------------------------------------------------------------ bölüm haritası
+
+    private fun bolumler() = sayfa {
+        yazi("🗺 Bölüm Haritası", 28f, kalin = true, alt = 4)
+        yazi("⭐ ${kayit.toplamYildiz} yıldız · Eski bölümleri tekrar oyna, 3 yıldızın peşine düş!", 14f, 0xFFCFD8DC.toInt(), alt = 14)
+        val acik = kayit.seviye
+        val son = acik + 3
+        var satir: LinearLayout? = null
+        for (sv in 1..son) {
+            if ((sv - 1) % 4 == 0) {
+                satir = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL }
+                addView(satir, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(8) })
+            }
+            val kilitli = sv > acik
+            val y = kayit.enIyiYildiz(sv)
+            val ozel = when {
+                sv % 5 == 0 -> "🏆"
+                sv >= 6 && sv % 3 == 0 -> "🦠"
+                else -> Katalog.haliTuru(sv).let { if (it == HaliTuru.YUN) "" else it.emoji }
+            }
+            val yildizlar = if (kilitli) "🔒" else "★".repeat(y) + "☆".repeat(3 - y)
+            satir?.addView(Button(this@MainActivity).apply {
+                text = "$sv $ozel\n$yildizlar"
+                isAllCaps = false
+                textSize = 15f
+                isEnabled = !kilitli
+                setTextColor(if (kilitli) 0xFF78909C.toInt() else if (sv == acik) 0xFF2B1B00.toInt() else Color.WHITE)
+                background = yuvarlak(
+                    when {
+                        kilitli -> 0x22FFFFFF
+                        sv == acik -> 0xFFFFB300.toInt()
+                        y == 3 -> 0xCC2E7D32.toInt()
+                        else -> 0x44FFFFFF
+                    }, 14,
+                )
+                stateListAnimator = null
+                setPadding(0, dp(10), 0, dp(10))
+                setOnClickListener {
+                    Ses.cal("dugme", 0.7f)
+                    oyna(true, sv)
+                }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(4); marginEnd = dp(4) })
+        }
+        yazi("🏆 Hazine Halısı · 🦠 İnatçı Kir · 🧵 Sentetik · 🧣 İpek · 🏺 Antika", 12f, 0xFF90A4AE.toInt(), alt = 12)
+        dugme("← Geri", 0x33FFFFFF, Color.WHITE) { goster(Ekran.MENU) }
     }
 
     private fun nasilOynanir() {

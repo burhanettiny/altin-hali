@@ -441,7 +441,6 @@ class OyunView(
         if (silkeAnim > 0) silkeAnim -= dt
         if (silkeBekleme > 0) silkeBekleme -= dt
         if (pencereSure > 0) pencereSure -= dt
-        if (nilsSure > 0) nilsSure -= dt
 
         if (durum == Durum.KUTLAMA) {
             kutlamaSure -= dt
@@ -622,6 +621,7 @@ class OyunView(
 
     private fun semiGuncelle(dt: Float) {
         if (seviye < 3) return
+        if (nilsSure > 0) nilsSure -= dt
         if (!semiVar) {
             semiZaman -= dt
             if (nilsSure > 0f && nilsSure < 0.3f && !semiVar) semiBaslat(true)
@@ -952,7 +952,7 @@ class OyunView(
 
     private fun sonucDugmeleriniKur() {
         val pw = minOf(width - 32f * d, 380f * d)
-        val ph = minOf(height - 40f * d, 580f * d)
+        val ph = minOf(height - 40f * d, if (reklamTeklifi() != null) 640f * d else 580f * d)
         menuPanel.set((width - pw) / 2, (height - ph) / 2, (width + pw) / 2, (height + ph) / 2)
         menuDugmeleri.clear()
         val sol = menuPanel.left + 22 * d
@@ -969,7 +969,7 @@ class OyunView(
                 Yaris.sira++
                 eylem(if (Yaris.aktif) "tekrar" else "yaris_sonuc")
             } else {
-                eylem("tekrar")
+                eylem(if (kazandi && sureli) "sonraki" else "tekrar")
             }
         }
         val menu = Dugme(
@@ -982,6 +982,48 @@ class OyunView(
         }
         menuDugmeleri.add(ana)
         menuDugmeleri.add(menu)
+        // Ödüllü reklam teklifi (isteğe bağlı)
+        reklamTeklifi()?.let { (yazi, tip) ->
+            val rb = Dugme(RectF(sol, menuPanel.bottom - 194 * d, sag, menuPanel.bottom - 142 * d), yazi, 0xFF26A69A.toInt(), Color.WHITE)
+            rb.eylem = { eylem("reklam_$tip") }
+            menuDugmeleri.add(rb)
+        }
+    }
+
+    private var devamKullanildi = false
+    private var katlaKullanildi = false
+    private var reklamBonusu = 0
+
+    /** Sonuç ekranında gösterilecek ödüllü reklam teklifi (yazı, tip) ya da null. */
+    private fun reklamTeklifi(): Pair<String, String>? {
+        if (yaris || !Reklam.odulHazir()) return null
+        return when {
+            !kazandi && sureli && !mahvoldu && !devamKullanildi -> "📺 Reklam izle: +20 sn devam et" to "devam"
+            kazandi && !katlaKullanildi && toplanan > 0 -> "📺 Reklam izle: altınları 2 katla" to "katla"
+            else -> null
+        }
+    }
+
+    /** Ödüllü reklam izlendiğinde etkinlik tarafından çağrılır. */
+    fun reklamOdulu(tip: String) {
+        when (tip) {
+            "devam" -> if (durum == Durum.BITTI && !kazandi) {
+                devamKullanildi = true
+                kalan = 20f
+                durum = Durum.OYNUYOR
+                menuDugmeleri.clear()
+                yazilar.add(Yazi(width / 2f, hali.centerY(), "+20 sn! Devam!", 0xFF81D4FA.toInt(), 1.5f, 26f))
+                Ses.cal("guc", 0.8f)
+            }
+            "katla" -> if (durum == Durum.BITTI && kazandi && !katlaKullanildi) {
+                katlaKullanildi = true
+                reklamBonusu = toplanan + bonus
+                kayit.altin += reklamBonusu
+                Ses.cal("kese", 0.9f)
+                sonucDugmeleriniKur()
+            }
+        }
+        invalidate()
     }
 
     // ---------------------------------------------------------------- güçlendiriciler
@@ -1711,7 +1753,16 @@ class OyunView(
         val bas = if (yaris) "${ayar.oyuncu}" else "Bölüm $seviye"
         val turYazi = turAdi()?.let { " · $it" } ?: ""
         val hasarYazi = if (hasarYuzde > 0.005f) " · hasar %${(hasarYuzde * 100).toInt()}" else ""
-        c.drawText("$bas$turYazi · ${haliTuru.emoji} ${haliTuru.ad}$hasarYazi · ${deterjan.emoji}", ustPanel.centerX(), ustPanel.bottom - 9 * d, yaziBoya)
+        c.drawText(sigdir("$bas$turYazi · ${haliTuru.emoji} ${haliTuru.ad}$hasarYazi · ${deterjan.emoji}", ustPanel.width() - 20 * d),
+            ustPanel.centerX(), ustPanel.bottom - 9 * d, yaziBoya)
+    }
+
+    /** Metni verilen genişliğe sığdırır (sonuna … koyar). */
+    private fun sigdir(metin: String, enFazla: Float): String {
+        if (yaziBoya.measureText(metin) <= enFazla) return metin
+        var m = metin
+        while (m.length > 3 && yaziBoya.measureText("$m…") > enFazla) m = m.dropLast(1)
+        return "$m…"
     }
 
     private fun duraklatDugmesiCiz(c: Canvas) {
@@ -1998,6 +2049,7 @@ class OyunView(
         satir("En iyi kombo", if (enIyiKombo >= 2) "🔥 x$enIyiKombo" else "—")
         val hy = (tahta.hasarOrani / Katalog.HASAR_SINIRI * 100).toInt().coerceAtMost(100)
         if (hy > 0) satir("Halı hasarı", "%$hy", if (hy > 25) 0xFFEF5350.toInt() else 0xFFFFCC80.toInt())
+        if (reklamBonusu > 0) satir("Reklam bonusu", "+$reklamBonusu", 0xFF80CBC4.toInt())
         if (!yaris) satir("Kasadaki altın", "💰 ${kayit.altin}")
 
         yaziBoya.textAlign = Paint.Align.CENTER

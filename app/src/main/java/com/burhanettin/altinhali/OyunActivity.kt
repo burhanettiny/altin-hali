@@ -15,6 +15,7 @@ class OyunActivity : Activity() {
     private lateinit var oyun: OyunView
     private var glGorunum: GLSurfaceView? = null
     private var sureli = true
+    private var seviye = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +26,9 @@ class OyunActivity : Activity() {
         val ayar = if (yaris) {
             OyunAyari(sureli = true, seviye = Yaris.seviye, tohum = Yaris.tohum, yaris = true, oyuncu = Yaris.siradaki)
         } else {
-            OyunAyari(sureli = sureli, seviye = Kayit(this).seviye, tohum = System.nanoTime())
+            val enFazla = Kayit(this).seviye
+            seviye = intent.getIntExtra(EK_SEVIYE, enFazla).coerceIn(1, enFazla)
+            OyunAyari(sureli = sureli, seviye = seviye, tohum = System.nanoTime())
         }
         // 3B: cihaz OpenGL ES 3.0 destekliyorsa ve ayarlarda açıksa
         val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -47,7 +50,14 @@ class OyunActivity : Activity() {
         }
         oyun = OyunView(this, ayar, renderer) { eylem ->
             when (eylem) {
-                "tekrar" -> yeniden(yaris)
+                "tekrar" -> yeniden(yaris, seviye)
+                "sonraki" -> Reklam.gecisGoster(this, seviye) { yeniden(false, minOf(seviye + 1, Kayit(this).seviye)) }
+                "reklam_devam", "reklam_katla" -> {
+                    val tip = eylem.removePrefix("reklam_")
+                    if (!Reklam.odulluGoster(this) { oyun.reklamOdulu(tip) }) {
+                        android.widget.Toast.makeText(this, "Reklam şu an hazır değil, biraz sonra dene.", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
                 "yaris_sonuc" -> {
                     startActivity(
                         Intent(this, MainActivity::class.java)
@@ -84,11 +94,14 @@ class OyunActivity : Activity() {
         super.onPause()
         oyun.duraklat()
         glGorunum?.onPause()
+        Ses.muzikDurdur()
     }
 
     override fun onResume() {
         super.onResume()
         glGorunum?.onResume()
+        Ses.muzikBaslat(0.18f)
+        Reklam.baslat(this)
     }
 
     @Deprecated("Deprecated in Java")
@@ -96,8 +109,11 @@ class OyunActivity : Activity() {
         if (!oyun.geriBasildi()) finish()
     }
 
-    private fun yeniden(yaris: Boolean) {
-        startActivity(Intent(this, OyunActivity::class.java).putExtra(EK_SURELI, sureli).putExtra(EK_YARIS, yaris))
+    private fun yeniden(yaris: Boolean, sv: Int) {
+        startActivity(
+            Intent(this, OyunActivity::class.java)
+                .putExtra(EK_SURELI, sureli).putExtra(EK_YARIS, yaris).putExtra(EK_SEVIYE, sv),
+        )
         finish()
         overridePendingTransition(0, 0)
     }
@@ -105,5 +121,6 @@ class OyunActivity : Activity() {
     companion object {
         const val EK_SURELI = "sureli"
         const val EK_YARIS = "yaris"
+        const val EK_SEVIYE = "seviye"
     }
 }

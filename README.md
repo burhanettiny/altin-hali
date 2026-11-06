@@ -61,7 +61,16 @@ Yanlış alet ya da kimya halıyı soldurur (hasar çubuğu). Hasar sınırı a�
 
 Aynı telefonda 2–4 kişi sırayla oynar; herkes aynı halıyı temizler. Bitiren 1000 + kalan saniye × 20 + bulduğu altın puan alır. Sonunda madalyalı sıralama ve rövanş.
 
+## 💰 Reklam ve yayın
+
+Oyunda Google AdMob altyapısı hazır (şu an Google'ın **test** kimlikleriyle). Reklamlar oyunu bölmez: ödüllü reklamlar isteğe bağlıdır (+20 sn devam, altınları 2 katla, günlük ödülü 2 katla, bedava güçlendirici), geçiş reklamı en erken 6. bölümden sonra seyrek gösterilir. Avrupa'daki oyuncular için gizlilik izni formu (GDPR) vardır.
+
+Play Store'a yayın ve reklam geliri için adım adım rehber: **[YAYIN.md](YAYIN.md)** · Gizlilik politikası: **[GIZLILIK.md](GIZLILIK.md)**
+
 ## Daha fazlası
+
+- **🗺 Bölüm haritası:** Eski bölümleri tekrar oyna, eksik yıldızları topla.
+- **🎵 Arka plan müziği:** Kodla üretilen yumuşak, döngüsel bir ezgi (Ayarlar'dan kapatılabilir).
 
 - **🔊 Ses efektleri ve titreşim:** Bütün sesler (altın, elmas, patlama, hayalet, kombo, zafer...) dosya kullanılmadan kodla üretilir.
 - **🏆 12 başarım:** Her biri altın ödüllü (ör. *Elmas Avcısı*, *Kombo Ustası*, *Şimşek*). Başarımlar ekranında ilerleme ve istatistikler görünür.

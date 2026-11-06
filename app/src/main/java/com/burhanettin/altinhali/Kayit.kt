@@ -35,6 +35,14 @@ class Kayit(ctx: Context) {
         get() = p.getBoolean("ayar_titresim", true)
         set(v) = p.edit().putBoolean("ayar_titresim", v).apply()
 
+    var muzikAcik: Boolean
+        get() = p.getBoolean("ayar_muzik", true)
+        set(v) = p.edit().putBoolean("ayar_muzik", v).apply()
+
+    var sonBedavaGuc: Long
+        get() = p.getLong("bedava_guc", 0L)
+        set(v) = p.edit().putLong("bedava_guc", v).apply()
+
     var grafik3d: Boolean
         get() = p.getBoolean("ayar_3d", true)
         set(v) = p.edit().putBoolean("ayar_3d", v).apply()

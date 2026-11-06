@@ -28,6 +28,10 @@ object Ses {
     private val idler = HashMap<String, Int>()
     private val hazir = HashSet<Int>()
     private var acik = true
+    private var muzikAcik = true
+    private var muzikIstek = false
+    private var muzikHacim = 0.25f
+    private var muzikAkis = 0
     private var titresim = true
     private var vib: Vibrator? = null
 
@@ -35,6 +39,7 @@ object Ses {
         val k = Kayit(ctx)
         acik = k.sesAcik
         titresim = k.titresimAcik
+        muzikAcik = k.muzikAcik
         if (havuz != null) return
         val app = ctx.applicationContext
         @Suppress("DEPRECATION")
@@ -48,11 +53,14 @@ object Ses {
                     .build(),
             )
             .build()
-        h.setOnLoadCompleteListener { _, id, durum -> if (durum == 0) synchronized(hazir) { hazir.add(id) } }
+        h.setOnLoadCompleteListener { _, id, durum ->
+            if (durum == 0) synchronized(hazir) { hazir.add(id) }
+            if (muzikIstek && muzikAkis == 0 && id == synchronized(idler) { idler["muzik"] }) muzikCal()
+        }
         havuz = h
         Thread {
             try {
-                val dizin = File(app.cacheDir, "ses_v2")
+                val dizin = File(app.cacheDir, "ses_v3")
                 dizin.mkdirs()
                 for ((ad, ornek) in uret()) {
                     val f = File(dizin, "$ad.wav")
@@ -66,9 +74,42 @@ object Ses {
         }.start()
     }
 
-    fun ayarla(ses: Boolean, tit: Boolean) {
+    fun ayarla(ses: Boolean, tit: Boolean, muzik: Boolean = muzikAcik) {
         acik = ses
         titresim = tit
+        val onceki = muzikAcik
+        muzikAcik = muzik
+        if (onceki && !muzik) muzikSustur()
+        if (!onceki && muzik && muzikIstek) muzikCal()
+    }
+
+    /** Arka plan müziğini döngüde çalar (etkinlik öne gelince çağrılır). */
+    fun muzikBaslat(hacim: Float) {
+        muzikIstek = true
+        muzikHacim = hacim
+        if (muzikAkis != 0) {
+            havuz?.setVolume(muzikAkis, hacim, hacim)
+            return
+        }
+        muzikCal()
+    }
+
+    fun muzikDurdur() {
+        muzikIstek = false
+        muzikSustur()
+    }
+
+    private fun muzikCal() {
+        if (!muzikAcik || muzikAkis != 0) return
+        val h = havuz ?: return
+        val id = synchronized(idler) { idler["muzik"] } ?: return
+        if (synchronized(hazir) { id !in hazir }) return
+        muzikAkis = h.play(id, muzikHacim, muzikHacim, 0, -1, 1f)
+    }
+
+    private fun muzikSustur() {
+        if (muzikAkis != 0) havuz?.stop(muzikAkis)
+        muzikAkis = 0
     }
 
     fun cal(ad: String, hacim: Float = 1f, hiz: Float = 1f) {
@@ -137,8 +178,44 @@ object Ses {
             "silkele" to ses(0.4f) { gurultu(it, 0f, 0.35f, 0.9f, 0.9f, r); suzul(it, 0f, 0.2f, 120f, 60f, 0.6f) },
             "alet" to ses(0.1f) { nota(it, 0f, 0.05f, 660f, 0.3f); nota(it, 0.04f, 0.05f, 990f, 0.3f) },
             "semi" to ses(0.5f) { suzul(it, 0f, 0.2f, 500f, 900f, 0.35f); suzul(it, 0.22f, 0.25f, 900f, 400f, 0.35f) },
+            "muzik" to muzik(),
             "nils" to ses(0.4f) { nota(it, 0f, 0.12f, 1319f, 0.3f); nota(it, 0.13f, 0.12f, 1047f, 0.3f); nota(it, 0.26f, 0.12f, 1319f, 0.3f) },
         )
+    }
+
+    /**
+     * Yumuşak, döngüye uygun bir arka plan ezgisi: Am – F – C – G akorları üzerinde
+     * pentatonik arpej, alçak bas ve hafif "şıkırtı". 8 saniye, başı ve sonu kesintisiz birleşir.
+     */
+    private fun muzik(): ShortArray = ses(8f) { b ->
+        val akorlar = arrayOf(
+            floatArrayOf(220f, 261.6f, 329.6f), // Am
+            floatArrayOf(174.6f, 220f, 261.6f), // F
+            floatArrayOf(261.6f, 329.6f, 392f), // C
+            floatArrayOf(196f, 246.9f, 293.7f), // G
+        )
+        val ezgi = floatArrayOf(659.3f, 587.3f, 523.3f, 440f, 523.3f, 587.3f, 659.3f, 784f)
+        for (k in 0 until 4) {
+            val bas = k * 2f
+            val a = akorlar[k]
+            nota(b, bas, 1.9f, a[0] / 2f, 0.22f)
+            for (n in 0 until 8) {
+                nota(b, bas + n * 0.25f, 0.45f, a[n % 3] * (if (n >= 4) 2f else 1f), 0.07f)
+            }
+            nota(b, bas + 0.5f, 0.9f, ezgi[(k * 2) % ezgi.size], 0.09f)
+            nota(b, bas + 1.25f, 0.6f, ezgi[(k * 2 + 1) % ezgi.size], 0.08f)
+        }
+        // Sesi yükselt (tepe ~0.85)
+        var tepe = 0f
+        for (v in b) tepe = maxOf(tepe, abs(v))
+        if (tepe > 0f) for (i in b.indices) b[i] *= 0.85f / tepe
+        // Döngü noktasında tık sesi olmasın diye uçları yumuşat
+        val n = (0.02f * HZ).toInt()
+        for (i in 0 until n) {
+            val f = i / n.toFloat()
+            b[i] *= f
+            b[b.size - 1 - i] *= f
+        }
     }
 
     private fun ses(sure: Float, yap: (FloatArray) -> Unit): ShortArray {

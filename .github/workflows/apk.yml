@@ -1,6 +1,6 @@
-# Altın Halı Android oyununun APK'sını derler ve "Sürümler" (Releases) sayfasında yayınlar.
-# Telefondan doğrudan indirme bağlantısı:
-#   https://github.com/burhanettiny/altin-hali/releases/latest/download/AltinHali.apk
+# Altın Halı: her gönderimde APK derler ve "Sürümler" (Releases) sayfasında yayınlar.
+# Telefondan doğrudan indirme: https://github.com/burhanettiny/altin-hali/releases/latest/download/AltinHali.apk
+# İmzalama anahtarı GitHub Secrets'a eklenmişse (YAYIN.md) Play Store için imzalı .aab da üretir.
 name: Altın Halı APK
 
 on:
@@ -14,7 +14,9 @@ permissions:
 jobs:
   derle:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    env:
+      ANAHTAR_BASE64: ${{ secrets.ANAHTAR_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -40,3 +42,19 @@ jobs:
             --title "Altın Halı ${SURUM} (derleme ${GITHUB_RUN_NUMBER})" \
             --notes "Telefona kurmak için AltinHali.apk dosyasını indirip açın. Kurulumda 'bilinmeyen kaynaklar' izni istenebilir." \
             --target "$GITHUB_SHA" --latest
+
+      # --- Play Store: imzalı uygulama paketi (yalnızca anahtar eklenmişse)
+      - name: İmzalı Play Store paketi (.aab)
+        if: env.ANAHTAR_BASE64 != ''
+        env:
+          ANAHTAR_SIFRESI: ${{ secrets.ANAHTAR_SIFRESI }}
+          ANAHTAR_ADI: ${{ secrets.ANAHTAR_ADI }}
+        run: |
+          echo "$ANAHTAR_BASE64" | base64 -d > "$RUNNER_TEMP/yukleme.jks"
+          ANAHTAR_DOSYASI="$RUNNER_TEMP/yukleme.jks" ./gradlew --no-daemon bundleRelease
+          cp app/build/outputs/bundle/release/app-release.aab AltinHali.aab
+      - uses: actions/upload-artifact@v4
+        if: env.ANAHTAR_BASE64 != ''
+        with:
+          name: altin-hali-play-store-aab
+          path: AltinHali.aab

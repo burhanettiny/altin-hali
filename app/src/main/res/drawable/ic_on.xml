@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Uyarlanabilir simgenin ön yüzü: güvenli alan ortadaki 66dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#33000000" android:pathData="M33,28h44v56h-44z" />
+    <path android:fillColor="#1E3554" android:pathData="M31,25h44v56h-44z" />
+    <path android:fillColor="#D9A85B" android:pathData="M35,29h36v48h-36z" />
+    <path android:fillColor="#8E1B2C" android:pathData="M37,31h32v44h-32z" />
+    <path android:fillColor="#D9A85B" android:pathData="M53,36L64,53L53,70L42,53Z" />
+    <path android:fillColor="#1E3554" android:pathData="M53,41L60.5,53L53,65L45.5,53Z" />
+    <path android:fillColor="#EFE3CC" android:pathData="M53,46L57.5,53L53,60L48.5,53Z" />
+    <path android:fillColor="#6D4C2F" android:fillAlpha="0.9" android:pathData="M37,60c6,-3 10,2 16,-1s10,-4 16,0v15h-32z" />
+    <path android:strokeColor="#EFE3CC" android:strokeWidth="1.5" android:pathData="M33,81v4M37,81v4M41,81v4M45,81v4M49,81v4M53,81v4M57,81v4M61,81v4M65,81v4M69,81v4M73,81v4" />
+    <path android:fillColor="#B8860B" android:pathData="M62,67m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
+    <path android:fillColor="#FFC83D" android:pathData="M62,67m-6.6,0a6.6,6.6 0,1 1,13.2 0a6.6,6.6 0,1 1,-13.2 0" />
+    <path android:fillColor="#FFE082" android:pathData="M59.5,64.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.85" android:pathData="M41,36m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.7" android:pathData="M46,41m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+</vector>
