@@ -1903,7 +1903,13 @@ class OyunView(
 
         yaziBoya.textSize = 14f * d
         yaziBoya.color = if (haliTuru == HaliTuru.YUN) 0xFFCFD8DC.toInt() else 0xFFFFE082.toInt()
-        c.drawText("${haliTuru.emoji} ${haliTuru.ad}: ${haliTuru.aciklama}".let { if (yaziBoya.measureText(it) > width - 24 * d) "${haliTuru.emoji} ${haliTuru.ad} — dikkatli ol!" else it }, cx, cy - 60 * d, yaziBoya)
+        val kisa = when (haliTuru) {
+            HaliTuru.YUN -> "dayanıklı"
+            HaliTuru.SENTETIK -> "alkol eritir!"
+            HaliTuru.IPEK -> "çok hassas, nazik ol!"
+            HaliTuru.ANTIKA -> "çok değerli, nazik ol!"
+        }
+        c.drawText("${haliTuru.emoji} ${haliTuru.ad}: ${haliTuru.aciklama}".let { if (yaziBoya.measureText(it) > width - 24 * d) "${haliTuru.emoji} ${haliTuru.ad}: $kisa" else it }, cx, cy - 60 * d, yaziBoya)
 
         // Lekeler
         val zorlu = tahta.lekeTurleri.filter { it != Leke.CAMUR && it != Leke.TOZ }
@@ -1936,7 +1942,7 @@ class OyunView(
         if (!kayit.egitimGoruldu) {
             val t = animZaman * 2.2f
             val ex = hali.centerX() + sin(t) * hali.width() * 0.3f
-            val ey = hali.top + hali.height() * 0.18f + sin(t * 2f) * 12 * d
+            val ey = hali.bottom - hali.height() * 0.1f + sin(t * 2f) * 12 * d
             emojiBoya.textSize = 44f * d
             emojiCiz(c, "👆", ex, ey)
         }

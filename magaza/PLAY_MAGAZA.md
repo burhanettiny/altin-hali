@@ -72,7 +72,7 @@ Oyun ücretsizdir ve isteğe bağlı reklamlarla desteklenir.
 |---|---|
 | Uygulama simgesi (512×512) | `ikon-512.png` |
 | Öne çıkan grafik (1024×500) | `one-cikan-1024x500.png` |
-| Telefon ekran görüntüleri (en az 2) | **Telefonundan al** (aşağıya bak) |
+| Telefon ekran görüntüleri (1080×1920) | `ekran-1-oyun.png` … `ekran-5-yarisma.png` (sırayla yükle) |
 
 **Ekran görüntüleri:** Play kuralı gereği oyunun gerçek görüntüsü olmalı. Oyunu telefonda aç, **Güç + Ses kısma** tuşlarına aynı anda basarak 4–6 tane çek:
 1. Kirli halıyı ovalarken (köpüklü)
