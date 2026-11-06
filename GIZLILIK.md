@@ -37,7 +37,7 @@ Oyun genel izleyici kitlesi içindir. 13 yaşından küçük çocuklardan bilere
 
 ## İletişim
 
-Geliştirici: _(adın veya stüdyo adın)_
-E-posta: _(iletişim e-postan — Play Store bunu herkese açık gösterir)_
+Geliştirici: Burhanettin Yalçınkaya
+E-posta: burhanettinyalcinkaya@gmail.com
 
 Bu politika değişirse güncel hâli bu sayfada yayımlanır.
