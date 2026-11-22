@@ -904,7 +904,7 @@ class MainActivity : Activity() {
                     "🥢 Halının üstündeki çöpleri cımbızla tutup 🗑️ çöp kutusuna at. Çöpün altı temizlenmez!\n\n" +
                     "🚿 Deterjan köpük bırakır: köpüğü su ile durula. Islak halı daha kolay temizlenir.\n\n" +
                     "📱 Telefonu salla ya da 🧺 düğmesine bas: halı silkelenir, toz ve hafif çöpler dökülür.\n\n" +
-                    "🧪 Zorlu lekeler: kahve, yağ, şarap, pas, mürekkep, sakız. Her biri farklı kimya ister. Formül Laboratuvarında kendi deterjanını yap!\n\n" +
+                    "🧪 Zorlu lekeler: kahve, yağ, vişne suyu, pas, mürekkep, sakız. Her biri farklı kimya ister. Formül Laboratuvarında kendi deterjanını yap!\n\n" +
                     "🧒 Şemi ortalığı kirletir, Nils onu kızdırınca daha da beter olur. Şemi'ye dokun, kaçsın!\n\n" +
                     "🏆 Her 5. bölüm bir Hazine Halısı: neredeyse iki kat hazine!\n" +
                     "🦠 İnatçı kir bölümlerinde temizlemediğin kir yeniden yayılır.\n\n" +

@@ -40,7 +40,7 @@ Cihaz OpenGL ES 3.0 desteklemiyorsa ya da Ayarlar'dan kapatılırsa oyun 2B çiz
 | Halı | Dikkat |
 |---|---|
 | 🐑 Yün | Dayanıklı |
-| 🧵 Sentetik | Yağ kolay çıkar, alkol (çözücü) eritir |
+| 🧵 Sentetik | Yağ kolay çıkar, aseton (çözücü) eritir |
 | 🧣 İpek | Sert fırça, güçlü asit ve oksijen soldurur — 1,6 kat altın |
 | 🏺 Antika | Çok hassas ve çok değerli — 2 kat altın |
 
@@ -51,9 +51,9 @@ Yanlış alet ya da kimya halıyı soldurur (hasar çubuğu). Hasar sınırı a�
 - **🥢 Çöpler:** Muz kabuğu, çorap, kola kutusu, gazete... Cımbızla tutup sağ alttaki 🗑️ çöp kutusuna at. Çöpün altı temizlenemez.
 - **🚿 Durulama:** Deterjan köpük bırakır; köpüğü su ile durulamadan halı temiz sayılmaz. Islak halı %35 daha kolay temizlenir, zamanla kurur.
 - **📱 Silkeleme:** Telefonu salla (ya da 🧺 düğmesi): halı silkelenir, toz ve hafif çöpler camdan uçar. Pencerede halı silkeleyen teyze görünür.
-- **🧪 Zorlu lekeler:** Kahve, yağ, şarap, pas, mürekkep, sakız. Her biri farklı kimya ister (oksijen, yağ çözücü, asit, çözücü...). Bölüm ilerledikçe yeni ve daha çok leke çıkar.
+- **🧪 Zorlu lekeler:** Kahve, yağ, vişne suyu, pas, mürekkep, sakız. Her biri farklı kimya ister (oksijen, yağ çözücü, asit, çözücü...). Bölüm ilerledikçe yeni ve daha çok leke çıkar.
 - **🧰 Aletler:** 🧽 Sünger, 🧹 Sert Fırça, 🚿 Su, 🥢 Cımbız, 🌀 Süpürge (toz), 🧊 Buz (sakız).
-- **🧪 Formül Laboratuvarı:** Karbonat, sirke, limon tuzu, oksijenli su, enzim, alkol, yumuşatıcı, lavanta esansı ile kendi deterjanını yap. Asit ile baz birbirini nötrler! 3 formül yuvası.
+- **🧪 Formül Laboratuvarı:** Karbonat, sirke, limon tuzu, oksijenli su, enzim, aseton, yumuşatıcı, lavanta esansı ile kendi deterjanını yap. Asit ile baz birbirini nötrler! 3 formül yuvası.
 - **🧒 Şemi ve 👧 Nils:** Şemi arada bir halının üstünden geçip çamurlu ayak izi bırakır. Nils onu kızdırınca Şemi kahve döker, çöp atar. Şemi'ye dokun, kaçsın.
 - **👴 Acı Dede:** Evin reisi; işi o verir, sonunda halıyı o değerlendirir.
 

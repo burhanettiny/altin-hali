@@ -29,12 +29,12 @@ enum class Leke(
         "Kahve lekesi: oksijenli ya da enzimli bir deterjan iyi gelir."),
     YAG("Yağ", 0xFF9C7A1C.toInt(), 1.5f, Ozellik.YAG, null, 0.25f, 3,
         "Yağ lekesi! Karbonatlı (yağ çözücü) bir formül dene."),
-    SARAP("Şarap", 0xFF6A1035.toInt(), 1.5f, Ozellik.OKSIJEN, Ozellik.ASIT, 0.3f, 4,
-        "Şarap lekesi: oksijenli su çok işe yarar."),
+    VISNE("Vişne suyu", 0xFF7A1030.toInt(), 1.5f, Ozellik.OKSIJEN, Ozellik.ASIT, 0.3f, 4,
+        "Vişne suyu lekesi: oksijenli su çok işe yarar."),
     PAS("Pas", 0xFFB2561B.toInt(), 1.8f, Ozellik.ASIT, null, 0.2f, 6,
         "Pas lekesi: sirke ya da limon tuzu gibi bir asit gerekir."),
     MUREKKEP("Mürekkep", 0xFF1A2F7A.toInt(), 1.7f, Ozellik.COZUCU, null, 0.2f, 8,
-        "Mürekkep: alkol gibi bir çözücü dene."),
+        "Mürekkep: aseton gibi bir çözücü dene."),
     SAKIZ("Sakız", 0xFFE87FB0.toInt(), 2.0f, Ozellik.COZUCU, null, 0.1f, 10,
         "Sakız! 🧊 Buzla dondurup kazı ya da çözücü kullan."),
     ;
@@ -160,7 +160,7 @@ enum class Esya(val emoji: String, val agirlik: Int) {
 /** Halı türleri: her biri farklı özen ister. */
 enum class HaliTuru(val ad: String, val emoji: String, val aciklama: String, val odulCarpani: Float) {
     YUN("Yün Halı", "🐑", "Dayanıklı. Sadece çok güçlü asit ve sert fırça az da olsa yıpratır.", 1f),
-    SENTETIK("Sentetik Halı", "🧵", "Yağ lekesi kolay çıkar ama alkol (çözücü) halıyı eritir!", 0.9f),
+    SENTETIK("Sentetik Halı", "🧵", "Yağ lekesi kolay çıkar ama aseton (çözücü) halıyı eritir!", 0.9f),
     IPEK("İpek Halı", "🧣", "Çok hassas! Sert fırça, güçlü asit ve oksijen renklerini soldurur.", 1.6f),
     ANTIKA("Antika Halı", "🏺", "Çok değerli: hazinesi bol ama her hata pahalı. Nazik ol!", 2f),
     ;
@@ -200,9 +200,9 @@ object Katalog {
             p(genel = 1.0f, yag = 0.1f, enzim = 0.1f), 0.6f),
         Deterjan("sampuan", "Köpük Şampuan", "🧴", "Geniş fırça alanı, bol köpük.", 150, 1.35f,
             p(genel = 1.1f, yag = 0.2f, enzim = 0.3f), 0.8f, kopukRengi = 0xFFB3E5FC.toInt()),
-        Deterjan("limon", "Limon Kuvveti", "🍋", "Asitli: pas ve şaraba karşı iyi.", 350, 1.1f,
+        Deterjan("limon", "Limon Kuvveti", "🍋", "Asitli: pas ve vişne suyuna karşı iyi.", 350, 1.1f,
             p(genel = 1.0f, yag = 0.1f, asit = 1.4f, oksijen = 0.4f), 0.5f, kopukRengi = 0xFFFFF59D.toInt()),
-        Deterjan("oksijen", "Oksijen Bombası", "💨", "Kahve ve şarap lekelerinin düşmanı.", 750, 1.4f,
+        Deterjan("oksijen", "Oksijen Bombası", "💨", "Kahve ve vişne suyu lekelerinin düşmanı.", 750, 1.4f,
             p(genel = 1.3f, yag = 0.2f, asit = 0.2f, oksijen = 1.5f, enzim = 0.6f), 0.6f, kopukRengi = 0xFFB9F6CA.toInt()),
         Deterjan("kristal", "Turbo Kristal", "🔮", "Her lekeye karşı güçlü, az köpük.", 1600, 1.7f,
             p(genel = 1.8f, yag = 1.2f, asit = 1.0f, oksijen = 1.0f, enzim = 1.0f, cozucu = 0.9f), 0.4f,
@@ -214,9 +214,9 @@ object Katalog {
         Malzeme("karbonat", "Karbonat", "🧂", "Bazik. Yağı çözer.", 120, p(genel = 0.1f, yag = 0.75f), 0f, baz = true),
         Malzeme("sirke", "Sirke", "🍶", "Hafif asit. Pas ve kireç söker.", 120, p(asit = 0.6f, oksijen = 0.1f), 0f, asit = true),
         Malzeme("limontuzu", "Limon Tuzu", "🍋", "Güçlü asit. Pasa birebir.", 220, p(asit = 0.9f, oksijen = 0.2f), 0f, asit = true),
-        Malzeme("oksijenli", "Oksijenli Su", "🧪", "Kahve, şarap gibi renkli lekeleri ağartır.", 260, p(genel = 0.1f, oksijen = 0.9f), 0.05f),
+        Malzeme("oksijenli", "Oksijenli Su", "🧪", "Kahve, vişne suyu gibi renkli lekeleri ağartır.", 260, p(genel = 0.1f, oksijen = 0.9f), 0.05f),
         Malzeme("enzim", "Enzim Tozu", "🧫", "Çamur ve yemek gibi organik kirleri parçalar.", 300, p(genel = 0.1f, oksijen = 0.2f, enzim = 0.9f), 0.05f),
-        Malzeme("alkol", "Alkol", "⚗️", "Çözücü. Mürekkep ve sakızı yumuşatır.", 350, p(yag = 0.2f, cozucu = 0.9f), 0f),
+        Malzeme("alkol", "Aseton", "💅", "Çözücü (oje çıkarıcı). Mürekkep ve sakızı yumuşatır.", 350, p(yag = 0.2f, cozucu = 0.9f), 0f),
         Malzeme("yumusatici", "Yumuşatıcı", "🌸", "Köpüğü azaltır, durulaması kolaylaşır.", 150, p(), -0.35f),
         Malzeme("esans", "Lavanta Esansı", "🌿", "Mis gibi koku: müşteri her altına %8 fazla öder.", 400, p(), 0f, altin = 0.08f),
     )

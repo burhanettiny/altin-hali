@@ -41,10 +41,10 @@ Altın Halı, gerçekçi 3B grafikleriyle rahatlatıcı ama giderek zorlaşan bi
 • 📱 Telefonu salla: halı silkelenir, toz camdan uçar!
 
 🧪 ZORLU LEKELER VE FORMÜL LABORATUVARI
-Kahve, yağ, şarap, pas, mürekkep, sakız… Her leke farklı bir kimya ister. Karbonat, sirke, limon tuzu, oksijenli su, enzim ve alkolü karıştır, kendi deterjanını geliştir. Ama dikkat: asit ile baz birbirini nötrler!
+Kahve, yağ, vişne suyu, pas, mürekkep, sakız… Her leke farklı bir kimya ister. Karbonat, sirke, limon tuzu, oksijenli su, enzim ve asetonu karıştır, kendi deterjanını geliştir. Ama dikkat: asit ile baz birbirini nötrler!
 
 🧶 HALI TÜRLERİ
-Dayanıklı yün, yağı kolay bırakan ama alkolde eriyen sentetik, çok hassas ipek ve paha biçilmez antika halılar. Yanlış alet ya da sert kimyasal halıyı soldurur!
+Dayanıklı yün, yağı kolay bırakan ama asetonda eriyen sentetik, çok hassas ipek ve paha biçilmez antika halılar. Yanlış alet ya da sert kimyasal halıyı soldurur!
 
 🧰 ALETLER
 Sünger, sert fırça, su, cımbız, süpürge ve sakız için buz.
@@ -114,7 +114,7 @@ https://github.com/burhanettiny/altin-hali/blob/main/GIZLILIK.md
 - Korku: **Hayır**
 - Cinsellik / çıplaklık: **Hayır**
 - Küfür / kaba dil: **Hayır**
-- Uyuşturucu, alkol, tütün: **Hayır** (formüldeki "alkol" temizlik malzemesi; kullanım/tüketim yok)
+- Uyuşturucu, alkol, tütün: **Hayır**
 - Kumar / benzetimli kumar: **Hayır** (gerçek parayla bir şey yok, şans kutusu satışı yok)
 - Kullanıcıların etkileşimi / içerik paylaşımı: **Hayır**
 - Konum paylaşımı: **Hayır**

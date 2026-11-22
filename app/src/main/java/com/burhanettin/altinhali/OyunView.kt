@@ -659,7 +659,7 @@ class OyunView(
                     semiDokme--
                     semiDokmeZaman = 0.8f + rnd.nextFloat()
                     if (rnd.nextFloat() < 0.5f) {
-                        val l = if (seviye >= 4 && rnd.nextBoolean()) Leke.SARAP else Leke.KAHVE
+                        val l = if (seviye >= 4 && rnd.nextBoolean()) Leke.VISNE else Leke.KAHVE
                         tahta.kirlet(semiX, semiY, 3.2f, l, tahta.katman * 1.1f)
                         yazilar.add(Yazi(gx(semiX), gy(semiY) - 30 * d, "Şemi ${l.ad.lowercase()} döktü!", 0xFFFFAB91.toInt(), 1.4f, 16f))
                     } else {
@@ -1905,7 +1905,7 @@ class OyunView(
         yaziBoya.color = if (haliTuru == HaliTuru.YUN) 0xFFCFD8DC.toInt() else 0xFFFFE082.toInt()
         val kisa = when (haliTuru) {
             HaliTuru.YUN -> "dayanıklı"
-            HaliTuru.SENTETIK -> "alkol eritir!"
+            HaliTuru.SENTETIK -> "aseton eritir!"
             HaliTuru.IPEK -> "çok hassas, nazik ol!"
             HaliTuru.ANTIKA -> "çok değerli, nazik ol!"
         }
